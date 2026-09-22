@@ -5,10 +5,13 @@ import com.reginaldo.apisistemavendacarros.dto.InteresseCarroResponse;
 import com.reginaldo.apisistemavendacarros.entity.InteresseCarro;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface InteresseCarroMapper {
     InteresseCarro toEntity(InteresseCarroRequest request);
+
+    void atualizar(InteresseCarroRequest request, @MappingTarget InteresseCarro interesseCarro);
 
     @Mapping(source = "carro.id", target = "carroId")
     @Mapping(source = "cliente.id", target = "clienteId")
