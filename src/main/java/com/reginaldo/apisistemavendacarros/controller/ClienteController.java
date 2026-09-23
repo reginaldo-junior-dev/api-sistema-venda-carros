@@ -3,6 +3,7 @@ package com.reginaldo.apisistemavendacarros.controller;
 import com.reginaldo.apisistemavendacarros.dto.ClienteRequest;
 import com.reginaldo.apisistemavendacarros.dto.ClienteResponse;
 import com.reginaldo.apisistemavendacarros.service.ClienteService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class ClienteController {
     private final ClienteService clienteService;
 
     @PostMapping
-    public ResponseEntity<ClienteResponse> cadastro (@RequestBody ClienteRequest request) {
+    public ResponseEntity<ClienteResponse> cadastro (@Valid @RequestBody ClienteRequest request) {
         ClienteResponse clienteResponse = clienteService.cadastro(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(clienteResponse);
     }
@@ -37,7 +38,7 @@ public class ClienteController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ClienteResponse> atualizar (@PathVariable UUID id, @RequestBody ClienteRequest request) {
+    public ResponseEntity<ClienteResponse> atualizar (@PathVariable UUID id, @Valid @RequestBody ClienteRequest request) {
         ClienteResponse clienteResponse = clienteService.atualizar(id, request);
         return ResponseEntity.ok(clienteResponse);
     }

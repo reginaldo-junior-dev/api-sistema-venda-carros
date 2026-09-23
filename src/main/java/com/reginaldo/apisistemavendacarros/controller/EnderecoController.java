@@ -3,6 +3,7 @@ package com.reginaldo.apisistemavendacarros.controller;
 import com.reginaldo.apisistemavendacarros.dto.EnderecoRequest;
 import com.reginaldo.apisistemavendacarros.dto.EnderecoResponse;
 import com.reginaldo.apisistemavendacarros.service.EnderecoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class EnderecoController {
     private final EnderecoService enderecoService;
 
     @PostMapping
-    public ResponseEntity<EnderecoResponse> cadastro (@RequestBody EnderecoRequest request) {
+    public ResponseEntity<EnderecoResponse> cadastro (@Valid @RequestBody EnderecoRequest request) {
         EnderecoResponse enderecoResponse = enderecoService.cadastro(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(enderecoResponse);
     }
@@ -37,7 +38,7 @@ public class EnderecoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EnderecoResponse> atualizar (@PathVariable UUID id, @RequestBody EnderecoRequest request) {
+    public ResponseEntity<EnderecoResponse> atualizar (@PathVariable UUID id, @Valid @RequestBody EnderecoRequest request) {
         EnderecoResponse enderecoResponse = enderecoService.atualizar(id, request);
         return ResponseEntity.ok(enderecoResponse);
     }

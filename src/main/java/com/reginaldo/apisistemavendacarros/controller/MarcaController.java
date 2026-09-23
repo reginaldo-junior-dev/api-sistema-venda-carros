@@ -3,6 +3,7 @@ package com.reginaldo.apisistemavendacarros.controller;
 import com.reginaldo.apisistemavendacarros.dto.MarcaRequest;
 import com.reginaldo.apisistemavendacarros.dto.MarcaResponse;
 import com.reginaldo.apisistemavendacarros.service.MarcaService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class MarcaController {
     private final MarcaService marcaService;
 
     @PostMapping
-    public ResponseEntity<MarcaResponse> cadastro (@RequestBody MarcaRequest request) {
+    public ResponseEntity<MarcaResponse> cadastro (@Valid @RequestBody MarcaRequest request) {
         MarcaResponse marcaResponse = marcaService.cadastro(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(marcaResponse);
     }
@@ -37,7 +38,7 @@ public class MarcaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MarcaResponse> atualizar (@PathVariable UUID id, @RequestBody MarcaRequest request) {
+    public ResponseEntity<MarcaResponse> atualizar (@PathVariable UUID id, @Valid @RequestBody MarcaRequest request) {
         MarcaResponse marcaResponse = marcaService.atualizar(id, request);
         return ResponseEntity.ok(marcaResponse);
     }

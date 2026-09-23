@@ -3,6 +3,7 @@ package com.reginaldo.apisistemavendacarros.controller;
 import com.reginaldo.apisistemavendacarros.dto.CategoriaRequest;
 import com.reginaldo.apisistemavendacarros.dto.CategoriaResponse;
 import com.reginaldo.apisistemavendacarros.service.CategoriaService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class CategoriaController {
     private final CategoriaService categoriaService;
 
     @PostMapping
-    public ResponseEntity<CategoriaResponse> cadastro (@RequestBody CategoriaRequest request) {
+    public ResponseEntity<CategoriaResponse> cadastro (@Valid @RequestBody CategoriaRequest request) {
         CategoriaResponse categoriaResponse = categoriaService.cadastro(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(categoriaResponse);
     }
@@ -37,7 +38,7 @@ public class CategoriaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CategoriaResponse> atualizar (@PathVariable UUID id, @RequestBody CategoriaRequest request) {
+    public ResponseEntity<CategoriaResponse> atualizar (@PathVariable UUID id, @Valid @RequestBody CategoriaRequest request) {
         CategoriaResponse categoriaResponse = categoriaService.atualizar(id, request);
         return ResponseEntity.ok(categoriaResponse);
     }

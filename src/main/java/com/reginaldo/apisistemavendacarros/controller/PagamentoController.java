@@ -3,6 +3,7 @@ package com.reginaldo.apisistemavendacarros.controller;
 import com.reginaldo.apisistemavendacarros.dto.PagamentoRequest;
 import com.reginaldo.apisistemavendacarros.dto.PagamentoResponse;
 import com.reginaldo.apisistemavendacarros.service.PagamentoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class PagamentoController {
     private final PagamentoService pagamentoService;
 
     @PostMapping
-    public ResponseEntity<PagamentoResponse> cadastro (@RequestBody PagamentoRequest request) {
+    public ResponseEntity<PagamentoResponse> cadastro (@Valid @RequestBody PagamentoRequest request) {
         PagamentoResponse pagamentoResponse = pagamentoService.cadastro(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(pagamentoResponse);
     }
@@ -37,7 +38,7 @@ public class PagamentoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PagamentoResponse> atualizar (@PathVariable UUID id, @RequestBody PagamentoRequest request) {
+    public ResponseEntity<PagamentoResponse> atualizar (@PathVariable UUID id, @Valid @RequestBody PagamentoRequest request) {
         PagamentoResponse pagamentoResponse = pagamentoService.atualizar(id, request);
         return ResponseEntity.ok(pagamentoResponse);
     }

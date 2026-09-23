@@ -3,6 +3,7 @@ package com.reginaldo.apisistemavendacarros.controller;
 import com.reginaldo.apisistemavendacarros.dto.InteresseCarroRequest;
 import com.reginaldo.apisistemavendacarros.dto.InteresseCarroResponse;
 import com.reginaldo.apisistemavendacarros.service.InteresseCarroService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class InteresseCarroController {
     private final InteresseCarroService interesseCarroService;
 
     @PostMapping
-    public ResponseEntity<InteresseCarroResponse> cadastro (@RequestBody InteresseCarroRequest request) {
+    public ResponseEntity<InteresseCarroResponse> cadastro (@Valid @RequestBody InteresseCarroRequest request) {
         InteresseCarroResponse interesseCarroResponse = interesseCarroService.cadastro(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(interesseCarroResponse);
     }
@@ -37,7 +38,7 @@ public class InteresseCarroController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<InteresseCarroResponse> atualizar (@PathVariable UUID id, @RequestBody InteresseCarroRequest request) {
+    public ResponseEntity<InteresseCarroResponse> atualizar (@PathVariable UUID id, @Valid @RequestBody InteresseCarroRequest request) {
         InteresseCarroResponse interesseCarroResponse = interesseCarroService.atualizar(id, request);
         return ResponseEntity.ok(interesseCarroResponse);
     }

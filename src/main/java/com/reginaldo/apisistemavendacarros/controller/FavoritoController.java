@@ -3,6 +3,7 @@ package com.reginaldo.apisistemavendacarros.controller;
 import com.reginaldo.apisistemavendacarros.dto.FavoritoRequest;
 import com.reginaldo.apisistemavendacarros.dto.FavoritoResponse;
 import com.reginaldo.apisistemavendacarros.service.FavoritoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class FavoritoController {
     private final FavoritoService favoritoService;
 
     @PostMapping
-    public ResponseEntity<FavoritoResponse> cadastro (@RequestBody FavoritoRequest request) {
+    public ResponseEntity<FavoritoResponse> cadastro (@Valid @RequestBody FavoritoRequest request) {
         FavoritoResponse favoritoResponse = favoritoService.cadastro(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(favoritoResponse);
     }
@@ -37,7 +38,7 @@ public class FavoritoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<FavoritoResponse> atualizar (@PathVariable UUID id, @RequestBody FavoritoRequest request) {
+    public ResponseEntity<FavoritoResponse> atualizar (@PathVariable UUID id, @Valid @RequestBody FavoritoRequest request) {
         FavoritoResponse favoritoResponse = favoritoService.atualizar(id, request);
         return ResponseEntity.ok(favoritoResponse);
     }

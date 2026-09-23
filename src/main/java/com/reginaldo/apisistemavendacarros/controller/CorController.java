@@ -3,6 +3,7 @@ package com.reginaldo.apisistemavendacarros.controller;
 import com.reginaldo.apisistemavendacarros.dto.CorRequest;
 import com.reginaldo.apisistemavendacarros.dto.CorResponse;
 import com.reginaldo.apisistemavendacarros.service.CorService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class CorController {
     private final CorService corService;
 
     @PostMapping
-    public ResponseEntity<CorResponse> cadastro (@RequestBody CorRequest request) {
+    public ResponseEntity<CorResponse> cadastro (@Valid @RequestBody CorRequest request) {
         CorResponse corResponse = corService.cadastro(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(corResponse);
     }
@@ -37,7 +38,7 @@ public class CorController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CorResponse> atualizar (@PathVariable UUID id, @RequestBody CorRequest request) {
+    public ResponseEntity<CorResponse> atualizar (@PathVariable UUID id, @Valid @RequestBody CorRequest request) {
         CorResponse corResponse = corService.atualizar(id, request);
         return ResponseEntity.ok(corResponse);
     }

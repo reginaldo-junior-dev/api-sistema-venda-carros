@@ -3,6 +3,7 @@ package com.reginaldo.apisistemavendacarros.controller;
 import com.reginaldo.apisistemavendacarros.dto.CompraRequest;
 import com.reginaldo.apisistemavendacarros.dto.CompraResponse;
 import com.reginaldo.apisistemavendacarros.service.CompraService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class CompraController {
     private final CompraService compraService;
 
     @PostMapping
-    public ResponseEntity<CompraResponse> cadastro (@RequestBody CompraRequest request) {
+    public ResponseEntity<CompraResponse> cadastro (@Valid @RequestBody CompraRequest request) {
         CompraResponse compraResponse = compraService.cadastro(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(compraResponse);
     }
@@ -37,7 +38,7 @@ public class CompraController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CompraResponse> atualizar (@PathVariable UUID id, @RequestBody CompraRequest request) {
+    public ResponseEntity<CompraResponse> atualizar (@PathVariable UUID id, @Valid @RequestBody CompraRequest request) {
         CompraResponse compraResponse = compraService.atualizar(id, request);
         return ResponseEntity.ok(compraResponse);
     }
