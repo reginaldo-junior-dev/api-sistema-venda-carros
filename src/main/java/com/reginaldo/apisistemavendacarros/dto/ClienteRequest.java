@@ -14,7 +14,7 @@ public record ClienteRequest(
         @NotNull
         LocalDate dataNascimento,
 
-        @NotNull
+        @NotBlank
         String telefone,
 
         @NotNull
