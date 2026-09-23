@@ -5,6 +5,7 @@ import com.reginaldo.apisistemavendacarros.dto.ParcelaResponse;
 import com.reginaldo.apisistemavendacarros.entity.Pagamento;
 import com.reginaldo.apisistemavendacarros.entity.Parcela;
 import com.reginaldo.apisistemavendacarros.enums.StatusParcela;
+import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.ParcelaMapper;
 import com.reginaldo.apisistemavendacarros.repository.PagamentoRepository;
 import com.reginaldo.apisistemavendacarros.repository.ParcelaRepository;
@@ -24,7 +25,7 @@ public class ParcelaService {
 
     public ParcelaResponse cadastro (ParcelaRequest request) {
         Pagamento pagamento = pagamentoRepository.findById(request.pagamentoId()).orElseThrow(() ->
-                new RuntimeException("Pagamento não encontrado"));
+                new RecursoNaoEncontradoException("Pagamento não encontrado"));
 
         Parcela parcela = mapper.toEntity(request);
         parcela.setStatus(StatusParcela.PENDENTE);
@@ -44,17 +45,17 @@ public class ParcelaService {
 
     public ParcelaResponse buscarPorId (UUID id) {
         Parcela parcela = parcelaRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Parcela não encontrada"));
+                new RecursoNaoEncontradoException("Parcela não encontrada"));
 
         return mapper.toResponse(parcela);
     }
 
     public ParcelaResponse atualizar (UUID id, ParcelaRequest request) {
         Parcela parcela = parcelaRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Parcela não encontrada"));
+                new RecursoNaoEncontradoException("Parcela não encontrada"));
 
         Pagamento pagamento = pagamentoRepository.findById(request.pagamentoId()).orElseThrow(() ->
-                new RuntimeException("Pagamento não encontrado"));
+                new RecursoNaoEncontradoException("Pagamento não encontrado"));
 
         mapper.atualizar(request, parcela);
         parcela.setPagamento(pagamento);
@@ -66,7 +67,7 @@ public class ParcelaService {
 
     public void excluir (UUID id) {
         parcelaRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Parcela não encontrada"));
+                new RecursoNaoEncontradoException("Parcela não encontrada"));
 
         parcelaRepository.deleteById(id);
     }

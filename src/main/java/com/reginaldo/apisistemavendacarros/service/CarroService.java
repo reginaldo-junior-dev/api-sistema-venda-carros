@@ -7,6 +7,7 @@ import com.reginaldo.apisistemavendacarros.entity.Categoria;
 import com.reginaldo.apisistemavendacarros.entity.Cor;
 import com.reginaldo.apisistemavendacarros.entity.Modelo;
 import com.reginaldo.apisistemavendacarros.enums.StatusCarro;
+import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.CarroMapper;
 import com.reginaldo.apisistemavendacarros.repository.CarroRepository;
 import com.reginaldo.apisistemavendacarros.repository.CategoriaRepository;
@@ -30,13 +31,13 @@ public class CarroService {
 
         public CarroResponse cadastro (CarroRequest request) {
             Modelo modelo = modeloRepository.findById(request.modeloId()).orElseThrow(() ->
-                    new RuntimeException("Modelo não encontrado"));
+                    new RecursoNaoEncontradoException("Modelo não encontrado"));
 
             Categoria categoria = categoriaRepository.findById(request.categoriaId()).orElseThrow(() ->
-                    new RuntimeException("Categoria não encontrada"));
+                    new RecursoNaoEncontradoException("Categoria não encontrada"));
 
             Cor cor = corRepository.findById(request.corId()).orElseThrow(() ->
-                    new RuntimeException("Cor não encontrada"));
+                    new RecursoNaoEncontradoException("Cor não encontrada"));
 
             Carro carro = mapper.toEntity(request);
             carro.setStatus(StatusCarro.DISPONIVEL);
@@ -58,23 +59,23 @@ public class CarroService {
 
         public CarroResponse buscarPorId (UUID id) {
             Carro carro = carroRepository.findById(id).orElseThrow(() ->
-                    new RuntimeException("Carro não encontrado"));
+                    new RecursoNaoEncontradoException("Carro não encontrado"));
 
             return mapper.toResponse(carro);
         }
 
         public CarroResponse atualizar (UUID id, CarroRequest request) {
             Carro carro = carroRepository.findById(id).orElseThrow(() ->
-                    new RuntimeException("Carro não encontrado"));
+                    new RecursoNaoEncontradoException("Carro não encontrado"));
 
             Modelo modelo = modeloRepository.findById(request.modeloId()).orElseThrow(() ->
-                    new RuntimeException("Modelo não encontrado"));
+                    new RecursoNaoEncontradoException("Modelo não encontrado"));
 
             Categoria categoria = categoriaRepository.findById(request.categoriaId()).orElseThrow(() ->
-                    new RuntimeException("Categoria não encontrada"));
+                    new RecursoNaoEncontradoException("Categoria não encontrada"));
 
             Cor cor = corRepository.findById(request.corId()).orElseThrow(() ->
-                    new RuntimeException("Cor não encontrada"));
+                    new RecursoNaoEncontradoException("Cor não encontrada"));
 
             mapper.atualizar(request, carro);
             carro.setModelo(modelo);
@@ -88,7 +89,7 @@ public class CarroService {
 
         public void excluir (UUID id) {
             carroRepository.findById(id).orElseThrow(() ->
-                    new RuntimeException("Carro não encontrado"));
+                    new RecursoNaoEncontradoException("Carro não encontrado"));
 
             carroRepository.deleteById(id);
         }

@@ -4,6 +4,7 @@ import com.reginaldo.apisistemavendacarros.dto.EnderecoRequest;
 import com.reginaldo.apisistemavendacarros.dto.EnderecoResponse;
 import com.reginaldo.apisistemavendacarros.entity.Cliente;
 import com.reginaldo.apisistemavendacarros.entity.Endereco;
+import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.EnderecoMapper;
 import com.reginaldo.apisistemavendacarros.repository.ClienteRepository;
 import com.reginaldo.apisistemavendacarros.repository.EnderecoRepository;
@@ -23,7 +24,7 @@ public class EnderecoService {
 
     public EnderecoResponse cadastro (EnderecoRequest request) {
         Cliente cliente = clienteRepository.findById(request.clienteId()).orElseThrow(() ->
-                new RuntimeException("Cliente não encontrado"));
+                new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         Endereco endereco = mapper.toEntity(request);
         endereco.setCliente(cliente);
@@ -42,17 +43,17 @@ public class EnderecoService {
 
     public EnderecoResponse buscarPorId (UUID id) {
         Endereco endereco = enderecoRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Endereço não encontrado"));
+                new RecursoNaoEncontradoException("Endereço não encontrado"));
 
         return mapper.toResponse(endereco);
     }
 
     public EnderecoResponse atualizar (UUID id, EnderecoRequest request) {
         Endereco endereco = enderecoRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Endereço não encontrado"));
+                new RecursoNaoEncontradoException("Endereço não encontrado"));
 
         Cliente cliente = clienteRepository.findById(request.clienteId()).orElseThrow(() ->
-                new RuntimeException("Cliente não encontrado"));
+                new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         mapper.atualizar(request, endereco);
         endereco.setCliente(cliente);
@@ -64,7 +65,7 @@ public class EnderecoService {
 
     public void excluir (UUID id) {
         enderecoRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Endereço não encontrado"));
+                new RecursoNaoEncontradoException("Endereço não encontrado"));
 
         enderecoRepository.deleteById(id);
     }

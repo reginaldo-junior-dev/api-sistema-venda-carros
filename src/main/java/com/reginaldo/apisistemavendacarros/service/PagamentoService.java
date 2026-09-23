@@ -5,6 +5,7 @@ import com.reginaldo.apisistemavendacarros.dto.PagamentoResponse;
 import com.reginaldo.apisistemavendacarros.entity.Compra;
 import com.reginaldo.apisistemavendacarros.entity.Pagamento;
 import com.reginaldo.apisistemavendacarros.enums.StatusPagamento;
+import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.PagamentoMapper;
 import com.reginaldo.apisistemavendacarros.repository.CompraRepository;
 import com.reginaldo.apisistemavendacarros.repository.PagamentoRepository;
@@ -24,7 +25,7 @@ public class PagamentoService {
 
     public PagamentoResponse cadastro (PagamentoRequest request) {
         Compra compra = compraRepository.findById(request.compraId()).orElseThrow(() ->
-                new RuntimeException("Compra não encontrada"));
+                new RecursoNaoEncontradoException("Compra não encontrada"));
 
         Pagamento pagamento = mapper.toEntity(request);
         pagamento.setValor(compra.getValorTotal());
@@ -45,17 +46,17 @@ public class PagamentoService {
 
     public PagamentoResponse buscarPorId (UUID id) {
         Pagamento pagamento = pagamentoRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Pagamento não encontrado"));
+                new RecursoNaoEncontradoException("Pagamento não encontrado"));
 
         return mapper.toResponse(pagamento);
     }
 
     public PagamentoResponse atualizar (UUID id, PagamentoRequest request) {
         Pagamento pagamento = pagamentoRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Pagamento não encontrado"));
+                new RecursoNaoEncontradoException("Pagamento não encontrado"));
 
         Compra compra = compraRepository.findById(request.compraId()).orElseThrow(() ->
-                new RuntimeException("Compra não encontrada"));
+                new RecursoNaoEncontradoException("Compra não encontrada"));
 
         mapper.atualizar(request, pagamento);
         pagamento.setValor(compra.getValorTotal());
@@ -68,7 +69,7 @@ public class PagamentoService {
 
     public void excluir (UUID id) {
         pagamentoRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Pagamento não encontrado"));
+                new RecursoNaoEncontradoException("Pagamento não encontrado"));
 
         pagamentoRepository.deleteById(id);
     }

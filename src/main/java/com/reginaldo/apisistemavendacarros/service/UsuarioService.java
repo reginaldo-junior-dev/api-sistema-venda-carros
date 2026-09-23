@@ -5,6 +5,7 @@ import com.reginaldo.apisistemavendacarros.dto.UsuarioResponse;
 import com.reginaldo.apisistemavendacarros.entity.Usuario;
 import com.reginaldo.apisistemavendacarros.enums.PerfilUsuario;
 import com.reginaldo.apisistemavendacarros.enums.ProvedorAutenticacao;
+import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.UsuarioMapper;
 import com.reginaldo.apisistemavendacarros.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,14 +40,14 @@ public class UsuarioService {
 
     public UsuarioResponse buscarPorId (UUID id) {
         Usuario usuario = usuarioRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Usuário não encontrado"));
+                new RecursoNaoEncontradoException("Usuário não encontrado"));
 
         return mapper.toResponse(usuario);
     }
 
     public UsuarioResponse atualizar (UUID id, UsuarioRequest request) {
         Usuario usuario = usuarioRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Usuário não encontrado"));
+                new RecursoNaoEncontradoException("Usuário não encontrado"));
 
         mapper.atualizar(request, usuario);
 
@@ -57,7 +58,7 @@ public class UsuarioService {
 
     public void excluir (UUID id) {
         usuarioRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Usuário não encontrado"));
+                new RecursoNaoEncontradoException("Usuário não encontrado"));
 
         usuarioRepository.deleteById(id);
     }

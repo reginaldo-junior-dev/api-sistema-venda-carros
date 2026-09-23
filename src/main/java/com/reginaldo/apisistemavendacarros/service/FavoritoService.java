@@ -5,6 +5,7 @@ import com.reginaldo.apisistemavendacarros.dto.FavoritoResponse;
 import com.reginaldo.apisistemavendacarros.entity.Carro;
 import com.reginaldo.apisistemavendacarros.entity.Cliente;
 import com.reginaldo.apisistemavendacarros.entity.Favorito;
+import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.FavoritoMapper;
 import com.reginaldo.apisistemavendacarros.repository.CarroRepository;
 import com.reginaldo.apisistemavendacarros.repository.ClienteRepository;
@@ -26,10 +27,10 @@ public class FavoritoService {
 
     public FavoritoResponse cadastro (FavoritoRequest request) {
         Carro carro = carroRepository.findById(request.carroId()).orElseThrow(() ->
-                new RuntimeException("Carro não encontrado"));
+                new RecursoNaoEncontradoException("Carro não encontrado"));
 
         Cliente cliente = clienteRepository.findById(request.clienteId()).orElseThrow(() ->
-                new RuntimeException("Cliente não encontrado"));
+                new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         Favorito favorito = mapper.toEntity(request);
         favorito.setCarro(carro);
@@ -49,20 +50,20 @@ public class FavoritoService {
 
     public FavoritoResponse buscarPorId (UUID id) {
         Favorito favorito = favoritoRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Favorito não encontrado"));
+                new RecursoNaoEncontradoException("Favorito não encontrado"));
 
         return mapper.toResponse(favorito);
     }
 
     public FavoritoResponse atualizar (UUID id, FavoritoRequest request) {
         Favorito favorito = favoritoRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Favorito não encontrado"));
+                new RecursoNaoEncontradoException("Favorito não encontrado"));
 
         Carro carro = carroRepository.findById(request.carroId()).orElseThrow(() ->
-                new RuntimeException("Carro não encontrado"));
+                new RecursoNaoEncontradoException("Carro não encontrado"));
 
         Cliente cliente = clienteRepository.findById(request.clienteId()).orElseThrow(() ->
-                new RuntimeException("Cliente não encontrado"));
+                new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         mapper.atualizar(request, favorito);
         favorito.setCarro(carro);
@@ -75,7 +76,7 @@ public class FavoritoService {
 
     public void excluir (UUID id) {
         favoritoRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Favorito não encontrado"));
+                new RecursoNaoEncontradoException("Favorito não encontrado"));
 
         favoritoRepository.deleteById(id);
     }

@@ -3,6 +3,7 @@ package com.reginaldo.apisistemavendacarros.service;
 import com.reginaldo.apisistemavendacarros.dto.CategoriaRequest;
 import com.reginaldo.apisistemavendacarros.dto.CategoriaResponse;
 import com.reginaldo.apisistemavendacarros.entity.Categoria;
+import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.CategoriaMapper;
 import com.reginaldo.apisistemavendacarros.repository.CategoriaRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,14 +35,14 @@ public class CategoriaService {
 
     public CategoriaResponse buscarPorId (UUID id) {
         Categoria categoria = categoriaRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Categoria não encontrada"));
+                new RecursoNaoEncontradoException("Categoria não encontrada"));
 
         return mapper.toResponse(categoria);
     }
 
     public CategoriaResponse atualizar (UUID id, CategoriaRequest request) {
         Categoria categoria = categoriaRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Categoria não encontrada"));
+                new RecursoNaoEncontradoException("Categoria não encontrada"));
 
         mapper.atualizar(request, categoria);
         categoriaRepository.save(categoria);
@@ -51,7 +52,7 @@ public class CategoriaService {
 
     public void excluir (UUID id) {
         categoriaRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Categoria não encontrada"));
+                new RecursoNaoEncontradoException("Categoria não encontrada"));
 
         categoriaRepository.deleteById(id);
     }

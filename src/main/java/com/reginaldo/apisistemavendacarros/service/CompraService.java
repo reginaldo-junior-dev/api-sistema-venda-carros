@@ -6,6 +6,7 @@ import com.reginaldo.apisistemavendacarros.entity.Carro;
 import com.reginaldo.apisistemavendacarros.entity.Cliente;
 import com.reginaldo.apisistemavendacarros.entity.Compra;
 import com.reginaldo.apisistemavendacarros.enums.StatusCompra;
+import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.CompraMapper;
 import com.reginaldo.apisistemavendacarros.repository.CarroRepository;
 import com.reginaldo.apisistemavendacarros.repository.ClienteRepository;
@@ -27,10 +28,10 @@ public class CompraService {
 
     public CompraResponse cadastro (CompraRequest request) {
         Cliente cliente = clienteRepository.findById(request.clienteId()).orElseThrow(() ->
-                new RuntimeException("Cliente não encontrado"));
+                new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         Carro carro = carroRepository.findById(request.carroId()).orElseThrow(() ->
-                new RuntimeException("Carro não encontrado"));
+                new RecursoNaoEncontradoException("Carro não encontrado"));
 
         Compra compra = mapper.toEntity(request);
         compra.setValorTotal(carro.getPreco());
@@ -52,20 +53,20 @@ public class CompraService {
 
     public CompraResponse buscarPorId (UUID id) {
         Compra compra = compraRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Compra não encontrada"));
+                new RecursoNaoEncontradoException("Compra não encontrada"));
 
         return mapper.toResponse(compra);
     }
 
     public CompraResponse atualizar (UUID id, CompraRequest request) {
         Compra compra = compraRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Compra não encontrada"));
+                new RecursoNaoEncontradoException("Compra não encontrada"));
 
         Cliente cliente = clienteRepository.findById(request.clienteId()).orElseThrow(() ->
-                new RuntimeException("Cliente não encontrado"));
+                new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         Carro carro = carroRepository.findById(request.carroId()).orElseThrow(() ->
-                new RuntimeException("Carro não encontrado"));
+                new RecursoNaoEncontradoException("Carro não encontrado"));
 
         mapper.atualizar(request, compra);
         compra.setValorTotal(carro.getPreco());
@@ -79,7 +80,7 @@ public class CompraService {
 
     public void excluir (UUID id) {
         compraRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Compra não encontrada"));
+                new RecursoNaoEncontradoException("Compra não encontrada"));
 
         compraRepository.deleteById(id);
     }

@@ -4,6 +4,7 @@ import com.reginaldo.apisistemavendacarros.dto.ModeloRequest;
 import com.reginaldo.apisistemavendacarros.dto.ModeloResponse;
 import com.reginaldo.apisistemavendacarros.entity.Marca;
 import com.reginaldo.apisistemavendacarros.entity.Modelo;
+import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.ModeloMapper;
 import com.reginaldo.apisistemavendacarros.repository.MarcaRepository;
 import com.reginaldo.apisistemavendacarros.repository.ModeloRepository;
@@ -23,7 +24,7 @@ public class ModeloService {
 
     public ModeloResponse cadastro (ModeloRequest request) {
         Marca marca = marcaRepository.findById(request.marcaId()).orElseThrow(() ->
-                new RuntimeException("Marca não encontrada"));
+                new RecursoNaoEncontradoException("Marca não encontrada"));
 
         Modelo modelo = mapper.toEntity(request);
         modelo.setMarca(marca);
@@ -41,17 +42,17 @@ public class ModeloService {
 
     public ModeloResponse buscarPorId (UUID id) {
         Modelo modelo = modeloRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Modelo não encontrado"));
+                new RecursoNaoEncontradoException("Modelo não encontrado"));
 
         return mapper.toResponse(modelo);
     }
 
     public ModeloResponse atualizar (UUID id, ModeloRequest request) {
         Modelo modelo = modeloRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Modelo não encontrado"));
+                new RecursoNaoEncontradoException("Modelo não encontrado"));
 
         Marca marca = marcaRepository.findById(request.marcaId()).orElseThrow(() ->
-                new RuntimeException("Marca não encontrada"));
+                new RecursoNaoEncontradoException("Marca não encontrada"));
 
         mapper.atualizar(request, modelo);
         modelo.setMarca(marca);
@@ -63,7 +64,7 @@ public class ModeloService {
 
     public void excluir (UUID id) {
         modeloRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Modelo não encontrado"));
+                new RecursoNaoEncontradoException("Modelo não encontrado"));
 
         modeloRepository.deleteById(id);
     }

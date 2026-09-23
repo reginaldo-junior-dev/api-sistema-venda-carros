@@ -3,6 +3,7 @@ package com.reginaldo.apisistemavendacarros.service;
 import com.reginaldo.apisistemavendacarros.dto.MarcaRequest;
 import com.reginaldo.apisistemavendacarros.dto.MarcaResponse;
 import com.reginaldo.apisistemavendacarros.entity.Marca;
+import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.MarcaMapper;
 import com.reginaldo.apisistemavendacarros.repository.MarcaRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +36,7 @@ public class MarcaService {
 
     public MarcaResponse buscarPorId (UUID id) {
         Marca marca = marcaRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Marca não encontrada"));
+                new RecursoNaoEncontradoException("Marca não encontrada"));
 
         return mapper.toResponse(marca);
     }
@@ -43,7 +44,7 @@ public class MarcaService {
     public MarcaResponse atualizar(UUID id, MarcaRequest request) {
 
         Marca marca = marcaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Marca não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Marca não encontrada"));
 
         mapper.atualizar(request, marca);
 
@@ -54,7 +55,7 @@ public class MarcaService {
 
     public void excluir (UUID id) {
         marcaRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Marca não encontrada"));
+                new RecursoNaoEncontradoException("Marca não encontrada"));
 
         marcaRepository.deleteById(id);
 

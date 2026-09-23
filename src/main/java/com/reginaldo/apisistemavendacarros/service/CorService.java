@@ -3,6 +3,7 @@ package com.reginaldo.apisistemavendacarros.service;
 import com.reginaldo.apisistemavendacarros.dto.CorRequest;
 import com.reginaldo.apisistemavendacarros.dto.CorResponse;
 import com.reginaldo.apisistemavendacarros.entity.Cor;
+import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.CorMapper;
 import com.reginaldo.apisistemavendacarros.repository.CorRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,14 +35,14 @@ public class CorService {
 
     public CorResponse buscarPorId (UUID id) {
         Cor cor = corRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Cor não encontrada"));
+                new RecursoNaoEncontradoException("Cor não encontrada"));
 
         return mapper.toResponse(cor);
     }
 
     public CorResponse atualizar (UUID id, CorRequest request) {
         Cor cor = corRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Cor não encontrada"));
+                new RecursoNaoEncontradoException("Cor não encontrada"));
 
         mapper.atualizar(request, cor);
         corRepository.save(cor);
@@ -51,7 +52,7 @@ public class CorService {
 
     public void excluir (UUID id) {
         corRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Cor não encontrada"));
+                new RecursoNaoEncontradoException("Cor não encontrada"));
 
         corRepository.deleteById(id);
     }

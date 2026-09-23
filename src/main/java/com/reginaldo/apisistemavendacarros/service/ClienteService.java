@@ -4,6 +4,7 @@ import com.reginaldo.apisistemavendacarros.dto.ClienteRequest;
 import com.reginaldo.apisistemavendacarros.dto.ClienteResponse;
 import com.reginaldo.apisistemavendacarros.entity.Cliente;
 import com.reginaldo.apisistemavendacarros.entity.Usuario;
+import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.ClienteMapper;
 import com.reginaldo.apisistemavendacarros.repository.ClienteRepository;
 import com.reginaldo.apisistemavendacarros.repository.UsuarioRepository;
@@ -23,7 +24,7 @@ public class ClienteService {
 
     public ClienteResponse cadastro (ClienteRequest request) {
         Usuario usuario = usuarioRepository.findById(request.usuarioId()).orElseThrow(() ->
-                new RuntimeException("Usuário não encontrado"));
+                new RecursoNaoEncontradoException("Usuário não encontrado"));
 
         Cliente cliente = mapper.toEntity(request);
         cliente.setUsuario(usuario);
@@ -42,17 +43,17 @@ public class ClienteService {
 
     public ClienteResponse buscarPorId (UUID id) {
         Cliente cliente = clienteRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Cliente não encontrado"));
+                new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         return mapper.toResponse(cliente);
     }
 
     public ClienteResponse atualizar (UUID id, ClienteRequest request) {
         Cliente cliente = clienteRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Cliente não encontrado"));
+                new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         Usuario usuario = usuarioRepository.findById(request.usuarioId()).orElseThrow(() ->
-                new RuntimeException("Usuário não encontrado"));
+                new RecursoNaoEncontradoException("Usuário não encontrado"));
 
         mapper.atualizar(request, cliente);
         cliente.setUsuario(usuario);
@@ -64,7 +65,7 @@ public class ClienteService {
 
     public void excluir (UUID id) {
         clienteRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Cliente não encontrado"));
+                new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         clienteRepository.deleteById(id);
     }
