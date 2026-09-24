@@ -1,5 +1,6 @@
 package com.reginaldo.apisistemavendacarros.exception;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -38,4 +39,17 @@ public class TratadorDeExcecoes {
             );
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erroValidacao);
     }
+
+    @ExceptionHandler(ValorInvalidoException.class)
+    public ResponseEntity<ErroResposta> erro (ValorInvalidoException ex) {
+        ErroResposta erroResposta = new ErroResposta(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erroResposta);
+    }
+
+
+
 }
