@@ -1,5 +1,7 @@
 package com.reginaldo.apisistemavendacarros.service;
 
+import com.reginaldo.apisistemavendacarros.Specification.CarroSpecification;
+import com.reginaldo.apisistemavendacarros.dto.CarroFiltro;
 import com.reginaldo.apisistemavendacarros.dto.CarroRequest;
 import com.reginaldo.apisistemavendacarros.dto.CarroResponse;
 import com.reginaldo.apisistemavendacarros.entity.Carro;
@@ -14,9 +16,11 @@ import com.reginaldo.apisistemavendacarros.repository.CategoriaRepository;
 import com.reginaldo.apisistemavendacarros.repository.CorRepository;
 import com.reginaldo.apisistemavendacarros.repository.ModeloRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
@@ -50,11 +54,12 @@ public class CarroService {
             return mapper.toResponse(carro);
         }
 
-        public List<CarroResponse> listar () {
-            List<Carro> carros = carroRepository.findAll();
-            return carros.stream()
-                    .map(mapper::toResponse)
-                    .toList();
+        public Page<CarroResponse> listar (CarroFiltro filtro, Pageable pageable) {
+            Specification<Carro> specification = CarroSpecification.filtrar(filtro);
+
+            Page<Carro> carros = carroRepository.findAll(specification, pageable);
+
+            return carros.map(mapper::toResponse);
         }
 
         public CarroResponse buscarPorId (UUID id) {

@@ -1,14 +1,18 @@
 package com.reginaldo.apisistemavendacarros.controller;
 
+import com.reginaldo.apisistemavendacarros.dto.CarroFiltro;
 import com.reginaldo.apisistemavendacarros.dto.CarroRequest;
 import com.reginaldo.apisistemavendacarros.dto.CarroResponse;
 import com.reginaldo.apisistemavendacarros.service.CarroService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,9 +30,10 @@ public class CarroController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CarroResponse>> lista() {
-        List<CarroResponse> carroResponses = carroService.listar();
-        return ResponseEntity.ok(carroResponses);
+    public ResponseEntity<Page<CarroResponse>> lista(@ModelAttribute CarroFiltro filtro,Pageable pageable) {
+
+        Page<CarroResponse> carroResponse = carroService.listar(filtro, pageable);
+        return ResponseEntity.ok(carroResponse);
     }
 
     @GetMapping("/{id}")
@@ -38,7 +43,10 @@ public class CarroController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CarroResponse> atualizar (@PathVariable UUID id, @Valid @RequestBody CarroRequest request) {
+    public ResponseEntity<CarroResponse> atualizar (
+            @PathVariable UUID id,
+            @Valid @RequestBody CarroRequest request) {
+
         CarroResponse carroResponse = carroService.atualizar(id, request);
         return ResponseEntity.ok(carroResponse);
     }
