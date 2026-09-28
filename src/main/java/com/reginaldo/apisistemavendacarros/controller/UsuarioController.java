@@ -2,11 +2,14 @@ package com.reginaldo.apisistemavendacarros.controller;
 
 import com.reginaldo.apisistemavendacarros.dto.UsuarioRequest;
 import com.reginaldo.apisistemavendacarros.dto.UsuarioResponse;
+import com.reginaldo.apisistemavendacarros.entity.Usuario;
+import com.reginaldo.apisistemavendacarros.mapper.UsuarioMapper;
 import com.reginaldo.apisistemavendacarros.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +21,7 @@ import java.util.UUID;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final UsuarioMapper usuarioMapper;
 
     @PostMapping
     public ResponseEntity<UsuarioResponse> cadastro (@Valid @RequestBody UsuarioRequest request) {
@@ -29,6 +33,11 @@ public class UsuarioController {
     public ResponseEntity<List<UsuarioResponse>> lista() {
         List<UsuarioResponse> usuarioResponses = usuarioService.listar();
         return ResponseEntity.ok(usuarioResponses);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioResponse> usuarioLogado (@AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(usuarioMapper.toResponse(usuario));
     }
 
     @GetMapping("/{id}")
