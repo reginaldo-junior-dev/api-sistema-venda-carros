@@ -1,4 +1,4 @@
-package com.reginaldo.apisistemavendacarros.Specification;
+package com.reginaldo.apisistemavendacarros.specification;
 
 import com.reginaldo.apisistemavendacarros.dto.CarroFiltro;
 import com.reginaldo.apisistemavendacarros.entity.Carro;
