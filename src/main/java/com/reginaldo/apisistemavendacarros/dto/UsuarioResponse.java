@@ -1,5 +1,7 @@
 package com.reginaldo.apisistemavendacarros.dto;
 
+import com.reginaldo.apisistemavendacarros.enums.PerfilUsuario;
+
 import java.util.UUID;
 
 public record UsuarioResponse(
@@ -7,6 +9,6 @@ public record UsuarioResponse(
         String nomeCompleto,
         String email,
         String provedor,
-        String role
+        PerfilUsuario perfil
 ) {
 }

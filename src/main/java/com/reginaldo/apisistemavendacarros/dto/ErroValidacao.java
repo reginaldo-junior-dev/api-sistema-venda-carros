@@ -1,4 +1,4 @@
-package com.reginaldo.apisistemavendacarros.exception;
+package com.reginaldo.apisistemavendacarros.dto;
 
 import java.time.LocalDateTime;
 import java.util.Map;
