@@ -1,6 +1,7 @@
 package com.reginaldo.apisistemavendacarros.exception;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.reginaldo.apisistemavendacarros.dto.ErroResposta;
+import com.reginaldo.apisistemavendacarros.dto.ErroValidacao;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
