@@ -9,6 +9,7 @@ import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoExcepti
 import com.reginaldo.apisistemavendacarros.mapper.UsuarioMapper;
 import com.reginaldo.apisistemavendacarros.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,10 +21,14 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final UsuarioMapper mapper;
+    private final PasswordEncoder passwordEncoder;
 
     public UsuarioResponse cadastro (UsuarioRequest request) {
+        String senhaHash = passwordEncoder.encode(request.senha());
+
         Usuario usuario = mapper.toEntity(request);
         usuario.setPerfil(PerfilUsuario.USUARIO);
+        usuario.setSenha(senhaHash);
         usuario.setProvedor(ProvedorAutenticacao.LOCAL);
 
         usuarioRepository.save(usuario);
