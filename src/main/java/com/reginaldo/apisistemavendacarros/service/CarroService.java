@@ -1,6 +1,6 @@
 package com.reginaldo.apisistemavendacarros.service;
 
-import com.reginaldo.apisistemavendacarros.Specification.CarroSpecification;
+import com.reginaldo.apisistemavendacarros.specification.CarroSpecification;
 import com.reginaldo.apisistemavendacarros.dto.CarroFiltro;
 import com.reginaldo.apisistemavendacarros.dto.CarroRequest;
 import com.reginaldo.apisistemavendacarros.dto.CarroResponse;
@@ -20,7 +20,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
