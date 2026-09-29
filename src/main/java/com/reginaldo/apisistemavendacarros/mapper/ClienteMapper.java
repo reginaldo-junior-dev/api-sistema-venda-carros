@@ -9,8 +9,12 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface ClienteMapper {
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "usuario", ignore = true)
     Cliente toEntity(ClienteRequest request);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "usuario", ignore = true)
     void atualizar(ClienteRequest request, @MappingTarget Cliente cliente);
 
     @Mapping(source = "usuario.id", target = "usuarioId")

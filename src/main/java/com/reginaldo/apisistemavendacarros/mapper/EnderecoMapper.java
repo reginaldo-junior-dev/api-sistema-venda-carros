@@ -9,8 +9,12 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface EnderecoMapper {
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "cliente", ignore = true)
     Endereco toEntity(EnderecoRequest request);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "cliente", ignore = true)
     void atualizar(EnderecoRequest request, @MappingTarget Endereco endereco);
 
     @Mapping(source = "cliente.id", target = "clienteId")
