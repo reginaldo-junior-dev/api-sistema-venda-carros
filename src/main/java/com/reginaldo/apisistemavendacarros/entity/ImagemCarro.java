@@ -14,8 +14,8 @@ import lombok.Setter;
 @Table(name = "imagem_carro")
 public class ImagemCarro extends EntidadeBase {
 
-    @Column(nullable = false)
-    private String url;
+    @Column(name = "chave_arquivo", nullable = false)
+    private String chaveArquivo;
 
     @Column(nullable = false)
     private Integer ordem;
