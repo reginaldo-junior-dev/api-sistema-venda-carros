@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Table(name = "favorito", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"cliente_id", "carro_id"})
+        @UniqueConstraint(name = "uk_favorito_cliente_carro", columnNames = {"cliente_id", "carro_id"})
 })
 public class Favorito extends EntidadeBase {
 

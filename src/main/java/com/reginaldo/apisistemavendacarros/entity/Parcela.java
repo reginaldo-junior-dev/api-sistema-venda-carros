@@ -9,14 +9,15 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "parcela")
+@Table(name = "parcela", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_parcela_pagamento_numero", columnNames = {"pagamento_id", "numero"})
+})
 public class Parcela extends EntidadeBase {
 
     @Column(nullable = false)
@@ -30,7 +31,7 @@ public class Parcela extends EntidadeBase {
     private StatusParcela status;
 
     @Column(name = "data_pagamento")
-    private LocalDateTime dataPagamento;
+    private LocalDate dataPagamento;
 
     @Column(name = "data_vencimento", nullable = false)
     private LocalDate dataVencimento;

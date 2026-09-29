@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -53,6 +54,9 @@ public class Carro extends EntidadeBase {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusCarro status;
+
+    @OneToMany(mappedBy = "carro")
+    private List<ImagemCarro> imagens;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "modelo_id", nullable = false)

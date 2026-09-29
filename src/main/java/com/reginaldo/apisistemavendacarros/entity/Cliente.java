@@ -16,7 +16,7 @@ import java.time.LocalDate;
 @Table(name = "cliente")
 public class Cliente extends EntidadeBase {
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String cpf;
 
     @Column(name = "data_nascimento", nullable = false)
@@ -26,6 +26,6 @@ public class Cliente extends EntidadeBase {
     private String telefone;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "usuario_id", nullable = false)
+    @JoinColumn(name = "usuario_id", nullable = false, unique = true)
     private Usuario usuario;
 }
