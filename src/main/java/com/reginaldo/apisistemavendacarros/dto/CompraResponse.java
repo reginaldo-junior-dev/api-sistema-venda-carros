@@ -8,10 +8,10 @@ import java.util.UUID;
 
 public record CompraResponse(
         UUID id,
-        BigDecimal valorTotal,
-        LocalDateTime dataCompra,
-        StatusCompra status,
         UUID carroId,
-        UUID clienteId
+        UUID clienteId,
+        BigDecimal valorTotal,
+        StatusCompra status,
+        LocalDateTime dataCompra
 ) {
 }

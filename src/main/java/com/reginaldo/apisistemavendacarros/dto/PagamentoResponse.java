@@ -9,11 +9,11 @@ import java.util.UUID;
 
 public record PagamentoResponse(
         UUID id,
+        UUID compraId,
         BigDecimal valor,
         MetodoPagamento metodo,
         StatusPagamento status,
-        LocalDateTime dataPagamento,
         String idExterno,
-        UUID compraId
+        LocalDateTime dataPagamento
 ) {
 }

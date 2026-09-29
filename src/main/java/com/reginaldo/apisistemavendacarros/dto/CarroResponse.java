@@ -7,6 +7,7 @@ import com.reginaldo.apisistemavendacarros.enums.TipoCombustivel;
 
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 public record CarroResponse (
@@ -21,6 +22,7 @@ public record CarroResponse (
         TipoCombustivel combustivel,
         TipoCambio cambio,
         StatusCarro status,
+        List<ImagemCarroResponse> imagens,
         UUID modeloId,
         UUID categoriaId,
         UUID corId

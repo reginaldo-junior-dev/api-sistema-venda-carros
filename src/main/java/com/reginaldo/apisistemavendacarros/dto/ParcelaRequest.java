@@ -1,11 +1,13 @@
 package com.reginaldo.apisistemavendacarros.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
-import java.util.UUID;
-
 public record ParcelaRequest(
-        @NotNull
-        UUID pagamentoId
+        @NotNull(message = "Quantidade é obrigatória")
+        @Min(value = 1, message = "Quantidade deve ser de no mínimo 1 parcela")
+        @Max(value = 12, message = "Quantidade deve ser de no máximo 12 parcelas")
+        Integer quantidade
 ) {
 }

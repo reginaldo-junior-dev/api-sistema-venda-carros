@@ -6,10 +6,10 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record PagamentoRequest(
-        @NotNull
-        MetodoPagamento metodo,
+        @NotNull(message = "Compra é obrigatória")
+        UUID compraId,
 
-        @NotNull
-        UUID compraId
+        @NotNull(message = "Método de pagamento é obrigatório")
+        MetodoPagamento metodo
 ) {
 }
