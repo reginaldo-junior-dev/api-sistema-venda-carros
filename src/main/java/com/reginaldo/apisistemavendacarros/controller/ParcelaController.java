@@ -2,50 +2,51 @@ package com.reginaldo.apisistemavendacarros.controller;
 
 import com.reginaldo.apisistemavendacarros.dto.ParcelaRequest;
 import com.reginaldo.apisistemavendacarros.dto.ParcelaResponse;
+import com.reginaldo.apisistemavendacarros.entity.Usuario;
 import com.reginaldo.apisistemavendacarros.service.ParcelaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/parcela")
 @RequiredArgsConstructor
 public class ParcelaController {
 
     private final ParcelaService parcelaService;
 
-    @PostMapping
-    public ResponseEntity<ParcelaResponse> cadastro (@Valid @RequestBody ParcelaRequest request) {
-        ParcelaResponse parcelaResponse = parcelaService.cadastro(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(parcelaResponse);
+    @PostMapping("/pagamento/{pagamentoId}/parcelas")
+    public ResponseEntity<List<ParcelaResponse>> criarParcelas (@PathVariable UUID pagamentoId, @Valid @RequestBody ParcelaRequest request) {
+        List<ParcelaResponse> parcelaResponses = parcelaService.criarParcelas(pagamentoId, request.quantidade());
+        return ResponseEntity.status(HttpStatus.CREATED).body(parcelaResponses);
     }
 
-    @GetMapping
-    public ResponseEntity<List<ParcelaResponse>> lista() {
-        List<ParcelaResponse> parcelaResponses = parcelaService.listar();
+    @GetMapping("/pagamento/{pagamentoId}/parcelas")
+    public ResponseEntity<List<ParcelaResponse>> listarPorPagamento (@AuthenticationPrincipal Usuario usuario, @PathVariable UUID pagamentoId) {
+        List<ParcelaResponse> parcelaResponses = parcelaService.listarPorPagamento(usuario, pagamentoId);
         return ResponseEntity.ok(parcelaResponses);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ParcelaResponse> buscarPorId (@PathVariable UUID id) {
-        ParcelaResponse parcelaResponse = parcelaService.buscarPorId(id);
+    @GetMapping("/parcela/{id}")
+    public ResponseEntity<ParcelaResponse> buscarPorId (@AuthenticationPrincipal Usuario usuario, @PathVariable UUID id) {
+        ParcelaResponse parcelaResponse = parcelaService.buscarPorId(usuario, id);
         return ResponseEntity.ok(parcelaResponse);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ParcelaResponse> atualizar (@PathVariable UUID id, @Valid @RequestBody ParcelaRequest request) {
-        ParcelaResponse parcelaResponse = parcelaService.atualizar(id, request);
+    @PutMapping("/parcela/{id}/pagar")
+    public ResponseEntity<ParcelaResponse> pagar (@PathVariable UUID id) {
+        ParcelaResponse parcelaResponse = parcelaService.pagar(id);
         return ResponseEntity.ok(parcelaResponse);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir (@PathVariable UUID id) {
-        parcelaService.excluir(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    @PutMapping("/parcela/{id}/cancelar")
+    public ResponseEntity<ParcelaResponse> cancelar (@PathVariable UUID id) {
+        ParcelaResponse parcelaResponse = parcelaService.cancelar(id);
+        return ResponseEntity.ok(parcelaResponse);
     }
 }

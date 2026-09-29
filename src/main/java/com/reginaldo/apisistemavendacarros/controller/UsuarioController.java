@@ -29,26 +29,32 @@ public class UsuarioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioResponse);
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioResponse> usuarioLogado (@AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(usuarioMapper.toResponse(usuario));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UsuarioResponse> atualizarUsuarioLogado (@AuthenticationPrincipal Usuario usuario, @Valid @RequestBody UsuarioRequest request) {
+        UsuarioResponse usuarioResponse = usuarioService.atualizar(usuario.getId(), request);
+        return ResponseEntity.ok(usuarioResponse);
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> excluirUsuarioLogado (@AuthenticationPrincipal Usuario usuario) {
+        usuarioService.excluir(usuario.getId());
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
     @GetMapping
     public ResponseEntity<List<UsuarioResponse>> lista() {
         List<UsuarioResponse> usuarioResponses = usuarioService.listar();
         return ResponseEntity.ok(usuarioResponses);
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<UsuarioResponse> usuarioLogado (@AuthenticationPrincipal Usuario usuario) {
-        return ResponseEntity.ok(usuarioMapper.toResponse(usuario));
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioResponse> buscarPorId (@PathVariable UUID id) {
         UsuarioResponse usuarioResponse = usuarioService.buscarPorId(id);
-        return ResponseEntity.ok(usuarioResponse);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<UsuarioResponse> atualizar (@PathVariable UUID id, @Valid @RequestBody UsuarioRequest request) {
-        UsuarioResponse usuarioResponse = usuarioService.atualizar(id, request);
         return ResponseEntity.ok(usuarioResponse);
     }
 
