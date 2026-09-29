@@ -1,5 +1,7 @@
 package com.reginaldo.apisistemavendacarros.service;
 
+import com.reginaldo.apisistemavendacarros.dto.ImagemCarroResponse;
+import com.reginaldo.apisistemavendacarros.repository.*;
 import com.reginaldo.apisistemavendacarros.specification.CarroSpecification;
 import com.reginaldo.apisistemavendacarros.dto.CarroFiltro;
 import com.reginaldo.apisistemavendacarros.dto.CarroRequest;
@@ -10,16 +12,18 @@ import com.reginaldo.apisistemavendacarros.entity.Cor;
 import com.reginaldo.apisistemavendacarros.entity.Modelo;
 import com.reginaldo.apisistemavendacarros.enums.StatusCarro;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
+import com.reginaldo.apisistemavendacarros.exception.ValorInvalidoException;
 import com.reginaldo.apisistemavendacarros.mapper.CarroMapper;
-import com.reginaldo.apisistemavendacarros.repository.CarroRepository;
-import com.reginaldo.apisistemavendacarros.repository.CategoriaRepository;
-import com.reginaldo.apisistemavendacarros.repository.CorRepository;
-import com.reginaldo.apisistemavendacarros.repository.ModeloRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -27,10 +31,15 @@ import java.util.UUID;
 public class CarroService {
 
         private final CarroRepository carroRepository;
+        private final ImagemCarroRepository imagemCarroRepository;
         private final CarroMapper mapper;
         private final ModeloRepository modeloRepository;
         private final CategoriaRepository categoriaRepository;
         private final CorRepository corRepository;
+        private final S3Service s3Service;
+        private final CompraRepository compraRepository;
+        private final FavoritoRepository favoritoRepository;
+        private final InteresseCarroRepository interesseCarroRepository;
 
         public CarroResponse cadastro (CarroRequest request) {
             Modelo modelo = modeloRepository.findById(request.modeloId()).orElseThrow(() ->
@@ -53,20 +62,53 @@ public class CarroService {
             return mapper.toResponse(carro);
         }
 
-        public Page<CarroResponse> listar (CarroFiltro filtro, Pageable pageable) {
+        private CarroResponse montarResponse(Carro carro) {
+            CarroResponse response = mapper.toResponse(carro);
+
+            List<ImagemCarroResponse> imagens = response.imagens().stream()
+                    .map(imagem -> new ImagemCarroResponse(
+                            imagem.id(),
+                            imagem.chaveArquivo(),
+                            s3Service.gerarUrl(imagem.chaveArquivo()),
+                            imagem.ordem(),
+                            imagem.principal(),
+                            imagem.carroId()
+                    ))
+                    .toList();
+
+            return new CarroResponse(
+                    response.id(),
+                    response.nome(),
+                    response.preco(),
+                    response.descricao(),
+                    response.anoFabricacao(),
+                    response.anoModelo(),
+                    response.quilometragem(),
+                    response.condicao(),
+                    response.combustivel(),
+                    response.cambio(),
+                    response.status(),
+                    imagens,
+                    response.modeloId(),
+                    response.categoriaId(),
+                    response.corId()
+        );
+    }
+
+        public Page<CarroResponse> listar(CarroFiltro filtro, Pageable pageable) {
             Specification<Carro> specification = CarroSpecification.filtrar(filtro);
 
             Page<Carro> carros = carroRepository.findAll(specification, pageable);
 
-            return carros.map(mapper::toResponse);
-        }
+            return carros.map(this::montarResponse);
+    }
 
-        public CarroResponse buscarPorId (UUID id) {
+        public CarroResponse buscarPorId(UUID id) {
             Carro carro = carroRepository.findById(id).orElseThrow(() ->
                     new RecursoNaoEncontradoException("Carro não encontrado"));
 
-            return mapper.toResponse(carro);
-        }
+            return montarResponse(carro);
+    }
 
         public CarroResponse atualizar (UUID id, CarroRequest request) {
             Carro carro = carroRepository.findById(id).orElseThrow(() ->
@@ -88,14 +130,39 @@ public class CarroService {
 
             carroRepository.save(carro);
 
-            return mapper.toResponse(carro);
+            return montarResponse(carro);
         }
 
-        public void excluir (UUID id) {
-            carroRepository.findById(id).orElseThrow(() ->
-                    new RecursoNaoEncontradoException("Carro não encontrado"));
+        @Transactional
+        public void excluir(UUID id) {
 
-            carroRepository.deleteById(id);
-        }
+            // Bloqueia o carro para que nenhuma compra seja criada entre a verificação e a exclusão
+            Carro carro = carroRepository.findByIdComBloqueio(id)
+                    .orElseThrow(() ->
+                            new RecursoNaoEncontradoException("Carro não encontrado"));
+
+            // Compras (e seus pagamentos/parcelas) são histórico financeiro e bloqueiam a exclusão
+            if (compraRepository.existsByCarroId(id)) {
+                throw new ValorInvalidoException("Carro possui compras registradas e não pode ser excluído");
+            }
+
+            List<String> chavesArquivos = carro.getImagens().stream()
+                    .map(imagem -> imagem.getChaveArquivo())
+                    .toList();
+
+            favoritoRepository.deleteByCarroId(id);
+            interesseCarroRepository.deleteByCarroId(id);
+            imagemCarroRepository.deleteAll(carro.getImagens());
+            carroRepository.delete(carro);
+
+            // Os arquivos do S3 só são apagados depois que o banco confirmar a exclusão;
+            // se algo falhar no banco, nenhuma imagem é perdida
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    chavesArquivos.forEach(s3Service::excluir);
+                }
+            });
+    }
 
 }

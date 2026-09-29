@@ -5,11 +5,13 @@ import com.reginaldo.apisistemavendacarros.dto.EnderecoResponse;
 import com.reginaldo.apisistemavendacarros.entity.Cliente;
 import com.reginaldo.apisistemavendacarros.entity.Endereco;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
+import com.reginaldo.apisistemavendacarros.exception.ValorInvalidoException;
 import com.reginaldo.apisistemavendacarros.mapper.EnderecoMapper;
 import com.reginaldo.apisistemavendacarros.repository.ClienteRepository;
 import com.reginaldo.apisistemavendacarros.repository.EnderecoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,51 +24,92 @@ public class EnderecoService {
     private final ClienteRepository clienteRepository;
     private final EnderecoMapper mapper;
 
-    public EnderecoResponse cadastro (EnderecoRequest request) {
-        Cliente cliente = clienteRepository.findById(request.clienteId()).orElseThrow(() ->
-                new RecursoNaoEncontradoException("Cliente não encontrado"));
+    @Transactional
+    public EnderecoResponse cadastro (UUID usuarioId, EnderecoRequest request) {
+        Cliente cliente = buscarClienteDoUsuario(usuarioId);
 
         Endereco endereco = mapper.toEntity(request);
         endereco.setCliente(cliente);
 
+        if (!enderecoRepository.existsByClienteId(cliente.getId())) {
+            endereco.setPrincipal(true);
+        } else if (endereco.getPrincipal()) {
+            enderecoRepository.desmarcarPrincipal(cliente.getId());
+        }
+
         enderecoRepository.save(endereco);
 
         return mapper.toResponse(endereco);
     }
 
-    public List<EnderecoResponse> listar () {
-        List<Endereco> enderecos = enderecoRepository.findAll();
-        return enderecos.stream()
+    public List<EnderecoResponse> listarPorUsuario (UUID usuarioId) {
+        Cliente cliente = buscarClienteDoUsuario(usuarioId);
+        return listarPorCliente(cliente.getId());
+    }
+
+    public List<EnderecoResponse> listarPorClienteId (UUID clienteId) {
+        if (!clienteRepository.existsById(clienteId)) {
+            throw new RecursoNaoEncontradoException("Cliente não encontrado");
+        }
+
+        return listarPorCliente(clienteId);
+    }
+
+    public EnderecoResponse buscarPorId (UUID usuarioId, UUID id) {
+        Cliente cliente = buscarClienteDoUsuario(usuarioId);
+        return mapper.toResponse(buscarEnderecoDoCliente(id, cliente.getId()));
+    }
+
+    @Transactional
+    public EnderecoResponse atualizar (UUID usuarioId, UUID id, EnderecoRequest request) {
+        Cliente cliente = buscarClienteDoUsuario(usuarioId);
+        Endereco endereco = buscarEnderecoDoCliente(id, cliente.getId());
+
+        boolean eraPrincipal = endereco.getPrincipal();
+
+        if (eraPrincipal && !request.principal()) {
+            throw new ValorInvalidoException("marque outro endereço como principal");
+        }
+
+        if (!eraPrincipal && request.principal()) {
+            enderecoRepository.desmarcarPrincipal(cliente.getId());
+        }
+
+        mapper.atualizar(request, endereco);
+
+        enderecoRepository.save(endereco);
+
+        return mapper.toResponse(endereco);
+    }
+
+    @Transactional
+    public void excluir (UUID usuarioId, UUID id) {
+        Cliente cliente = buscarClienteDoUsuario(usuarioId);
+        Endereco endereco = buscarEnderecoDoCliente(id, cliente.getId());
+
+        enderecoRepository.delete(endereco);
+        // Garante que o DELETE seja executado antes de promover outro endereço a principal
+        enderecoRepository.flush();
+
+        if (endereco.getPrincipal()) {
+            enderecoRepository.findFirstByClienteId(cliente.getId())
+                    .ifPresent(outro -> outro.setPrincipal(true));
+        }
+    }
+
+    private List<EnderecoResponse> listarPorCliente (UUID clienteId) {
+        return enderecoRepository.findAllByClienteId(clienteId).stream()
                 .map(mapper::toResponse)
                 .toList();
     }
 
-    public EnderecoResponse buscarPorId (UUID id) {
-        Endereco endereco = enderecoRepository.findById(id).orElseThrow(() ->
-                new RecursoNaoEncontradoException("Endereço não encontrado"));
-
-        return mapper.toResponse(endereco);
-    }
-
-    public EnderecoResponse atualizar (UUID id, EnderecoRequest request) {
-        Endereco endereco = enderecoRepository.findById(id).orElseThrow(() ->
-                new RecursoNaoEncontradoException("Endereço não encontrado"));
-
-        Cliente cliente = clienteRepository.findById(request.clienteId()).orElseThrow(() ->
+    private Cliente buscarClienteDoUsuario (UUID usuarioId) {
+        return clienteRepository.findByUsuarioId(usuarioId).orElseThrow(() ->
                 new RecursoNaoEncontradoException("Cliente não encontrado"));
-
-        mapper.atualizar(request, endereco);
-        endereco.setCliente(cliente);
-
-        enderecoRepository.save(endereco);
-
-        return mapper.toResponse(endereco);
     }
 
-    public void excluir (UUID id) {
-        enderecoRepository.findById(id).orElseThrow(() ->
+    private Endereco buscarEnderecoDoCliente (UUID id, UUID clienteId) {
+        return enderecoRepository.findByIdAndClienteId(id, clienteId).orElseThrow(() ->
                 new RecursoNaoEncontradoException("Endereço não encontrado"));
-
-        enderecoRepository.deleteById(id);
     }
 }
