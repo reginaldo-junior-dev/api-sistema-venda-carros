@@ -1,0 +1,22 @@
+package com.reginaldo.apisistemavendacarros.dto.pagamento;
+
+import com.reginaldo.apisistemavendacarros.enums.MetodoPagamento;
+import com.reginaldo.apisistemavendacarros.enums.StatusPagamento;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+public record PagamentoResponse(
+        UUID id,
+        UUID compraId,
+        BigDecimal valor,
+        MetodoPagamento metodo,
+        StatusPagamento status,
+        String idExterno,
+        LocalDateTime dataPagamento,
+
+        // Preenchido só quando o banco pede 3D Secure
+        String clientSecret
+) {
+}
