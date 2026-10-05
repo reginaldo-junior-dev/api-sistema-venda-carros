@@ -1,6 +1,6 @@
 package com.reginaldo.apisistemavendacarros.security;
 
-import com.reginaldo.apisistemavendacarros.dto.ErroResposta;
+import com.reginaldo.apisistemavendacarros.dto.erro.ErroResposta;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,10 +14,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
-/**
- * Escreve 401 e 403 no mesmo formato ErroResposta usado pelo TratadorDeExcecoes.
- * Necessário porque esses erros acontecem nos filtros do Spring Security, antes do @RestControllerAdvice.
- */
+// 401 e 403 acontecem nos filtros do Spring Security, antes do @RestControllerAdvice.
+// Por isso o ErroResposta é montado aqui
 @Component
 @RequiredArgsConstructor
 public class RespostaErroSeguranca {
