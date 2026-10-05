@@ -3,6 +3,8 @@ package com.reginaldo.apisistemavendacarros.repository;
 import com.reginaldo.apisistemavendacarros.entity.Pagamento;
 import com.reginaldo.apisistemavendacarros.enums.StatusPagamento;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -18,12 +20,22 @@ public interface PagamentoRepository extends JpaRepository<Pagamento, UUID> {
 
     List<Pagamento> findByCompraClienteId(UUID clienteId);
 
-    // Com bloqueio: um pagamento recusado/cancelado ao mesmo tempo não é sobrescrito pelo cancelamento da compra
+    Page<Pagamento> findByCompraClienteId(UUID clienteId, Pageable pageable);
+
+    // Com bloqueio para não sobrescrever um pagamento recusado/cancelado ao mesmo tempo
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<Pagamento> findByCompraIdAndStatus(UUID compraId, StatusPagamento status);
 
     @Query("SELECT p.compra.id FROM Pagamento p WHERE p.id = :id")
     Optional<UUID> findCompraIdByPagamentoId(@Param("id") UUID id);
+
+    @Query("SELECT p.compra.id FROM Pagamento p WHERE p.idExterno = :idExterno")
+    Optional<UUID> findCompraIdByIdExterno(@Param("idExterno") String idExterno);
+
+    // Com bloqueio: eventos repetidos da Stripe não processam o mesmo pagamento duas vezes
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Pagamento p WHERE p.idExterno = :idExterno")
+    Optional<Pagamento> findByIdExternoComBloqueio(@Param("idExterno") String idExterno);
 
     // SELECT ... FOR UPDATE: evita aprovar, recusar ou cancelar o mesmo pagamento ao mesmo tempo
     @Lock(LockModeType.PESSIMISTIC_WRITE)

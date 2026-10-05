@@ -1,6 +1,8 @@
 package com.reginaldo.apisistemavendacarros.repository;
 
 import com.reginaldo.apisistemavendacarros.entity.Favorito;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -14,6 +16,8 @@ public interface FavoritoRepository extends JpaRepository<Favorito, UUID> {
     boolean existsByClienteIdAndCarroId(UUID clienteId, UUID carroId);
 
     List<Favorito> findByClienteId(UUID clienteId);
+
+    Page<Favorito> findByClienteId(UUID clienteId, Pageable pageable);
 
     void deleteByClienteId(UUID clienteId);
 

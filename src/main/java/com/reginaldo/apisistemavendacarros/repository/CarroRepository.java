@@ -14,7 +14,7 @@ import java.util.UUID;
 public interface CarroRepository extends JpaRepository<Carro, UUID>,
         JpaSpecificationExecutor<Carro> {
 
-    // SELECT ... FOR UPDATE: requisições simultâneas para o mesmo carro esperam a transação atual terminar
+    // SELECT ... FOR UPDATE: requisições simultâneas para o mesmo carro esperam a transação atual
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c FROM Carro c WHERE c.id = :id")
     Optional<Carro> findByIdComBloqueio(@Param("id") UUID id);
