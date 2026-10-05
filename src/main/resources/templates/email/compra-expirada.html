@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{email/layout :: layout(~{::conteudo})}">
+<body>
+<div th:fragment="conteudo">
+    <p style="margin:0 0 16px;">Olá, <strong th:text="${nome}">Cliente</strong>!</p>
+    <p style="margin:0 0 16px;">Sua reserva expirou porque o pagamento não foi concluído a tempo, e a compra foi cancelada.</p>
+    <table role="presentation" cellpadding="0" cellspacing="0"
+           style="width:100%; margin:0 0 16px; background-color:#fef2f2; border-left:4px solid #dc2626; border-radius:4px;">
+        <tr>
+            <td style="padding:16px;">
+                <div style="color:#71717a; font-size:13px;">Veículo</div>
+                <div style="font-weight:bold; margin-bottom:8px;" th:text="${carro}">Carro</div>
+                <div style="color:#71717a; font-size:13px;">Valor</div>
+                <div style="font-weight:bold;"
+                     th:text="'R$ ' + ${#numbers.formatDecimal(valor, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
+            </td>
+        </tr>
+    </table>
+    <p style="margin:0;">Se o carro ainda estiver disponível, você pode fazer uma nova compra a qualquer momento.</p>
+</div>
+</body>
+</html>

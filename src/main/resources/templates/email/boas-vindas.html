@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{email/layout :: layout(~{::conteudo})}">
+<body>
+<div th:fragment="conteudo">
+    <p style="margin:0 0 16px;">Olá, <strong th:text="${nome}">Cliente</strong>!</p>
+    <p style="margin:0 0 16px;">Seu cadastro foi realizado com sucesso.</p>
+    <p style="margin:0;">Agora você já pode explorar o catálogo, favoritar carros e demonstrar interesse nos veículos que quiser.</p>
+</div>
+</body>
+</html>
