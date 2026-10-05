@@ -1,6 +1,6 @@
 package com.reginaldo.apisistemavendacarros.specification;
 
-import com.reginaldo.apisistemavendacarros.dto.CarroFiltro;
+import com.reginaldo.apisistemavendacarros.dto.carro.CarroFiltro;
 import com.reginaldo.apisistemavendacarros.entity.Carro;
 import com.reginaldo.apisistemavendacarros.enums.CondicaoCarro;
 import com.reginaldo.apisistemavendacarros.enums.StatusCarro;
