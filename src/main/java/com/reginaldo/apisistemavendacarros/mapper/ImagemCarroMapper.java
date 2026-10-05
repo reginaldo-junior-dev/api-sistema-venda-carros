@@ -1,6 +1,6 @@
 package com.reginaldo.apisistemavendacarros.mapper;
 
-import com.reginaldo.apisistemavendacarros.dto.ImagemCarroResponse;
+import com.reginaldo.apisistemavendacarros.dto.imagem.ImagemCarroResponse;
 import com.reginaldo.apisistemavendacarros.entity.ImagemCarro;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

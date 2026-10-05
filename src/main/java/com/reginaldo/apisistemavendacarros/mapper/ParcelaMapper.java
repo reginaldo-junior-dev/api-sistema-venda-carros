@@ -1,6 +1,6 @@
 package com.reginaldo.apisistemavendacarros.mapper;
 
-import com.reginaldo.apisistemavendacarros.dto.ParcelaResponse;
+import com.reginaldo.apisistemavendacarros.dto.parcela.ParcelaResponse;
 import com.reginaldo.apisistemavendacarros.entity.Parcela;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

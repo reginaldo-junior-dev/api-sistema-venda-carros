@@ -1,7 +1,7 @@
 package com.reginaldo.apisistemavendacarros.mapper;
 
-import com.reginaldo.apisistemavendacarros.dto.CarroRequest;
-import com.reginaldo.apisistemavendacarros.dto.CarroResponse;
+import com.reginaldo.apisistemavendacarros.dto.carro.CarroRequest;
+import com.reginaldo.apisistemavendacarros.dto.carro.CarroResponse;
 import com.reginaldo.apisistemavendacarros.entity.Carro;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
