@@ -1,7 +1,7 @@
 package com.reginaldo.apisistemavendacarros.service;
 
-import com.reginaldo.apisistemavendacarros.dto.InteresseCarroRequest;
-import com.reginaldo.apisistemavendacarros.dto.InteresseCarroResponse;
+import com.reginaldo.apisistemavendacarros.dto.interesse.InteresseCarroRequest;
+import com.reginaldo.apisistemavendacarros.dto.interesse.InteresseCarroResponse;
 import com.reginaldo.apisistemavendacarros.entity.Carro;
 import com.reginaldo.apisistemavendacarros.entity.Cliente;
 import com.reginaldo.apisistemavendacarros.entity.InteresseCarro;
@@ -14,6 +14,8 @@ import com.reginaldo.apisistemavendacarros.repository.CarroRepository;
 import com.reginaldo.apisistemavendacarros.repository.ClienteRepository;
 import com.reginaldo.apisistemavendacarros.repository.InteresseCarroRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,7 +43,7 @@ public class InteresseCarroService {
             throw new ValorInvalidoException("Não é possível registrar interesse em um carro vendido");
         }
 
-        // nome, email e telefone ficam gravados como informados agora, sem vínculo com os dados atuais do Cliente
+        // Contato gravado como informado agora, sem vínculo com os dados atuais do cliente
         InteresseCarro interesseCarro = mapper.toEntity(request);
         interesseCarro.setStatus(StatusInteresse.NOVO);
         interesseCarro.setCarro(carro);
@@ -52,20 +54,15 @@ public class InteresseCarroService {
         return mapper.toResponse(interesseCarro);
     }
 
-    public List<InteresseCarroResponse> listarPorUsuario (UUID usuarioId) {
+    public Page<InteresseCarroResponse> listarPorUsuario (UUID usuarioId, Pageable pageable) {
         Cliente cliente = clienteRepository.findByUsuarioId(usuarioId).orElseThrow(() ->
                 new RecursoNaoEncontradoException("Cliente não encontrado"));
 
-        return interesseCarroRepository.findByClienteId(cliente.getId()).stream()
-                .map(mapper::toResponse)
-                .toList();
+        return interesseCarroRepository.findByClienteId(cliente.getId(), pageable).map(mapper::toResponse);
     }
 
-    public List<InteresseCarroResponse> listar () {
-        List<InteresseCarro> interesses = interesseCarroRepository.findAll();
-        return interesses.stream()
-                .map(mapper::toResponse)
-                .toList();
+    public Page<InteresseCarroResponse> listar (Pageable pageable) {
+        return interesseCarroRepository.findAll(pageable).map(mapper::toResponse);
     }
 
     public InteresseCarroResponse buscarPorId (UUID id) {

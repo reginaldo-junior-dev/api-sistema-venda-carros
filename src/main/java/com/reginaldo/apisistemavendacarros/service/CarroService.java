@@ -1,11 +1,11 @@
 package com.reginaldo.apisistemavendacarros.service;
 
-import com.reginaldo.apisistemavendacarros.dto.ImagemCarroResponse;
+import com.reginaldo.apisistemavendacarros.dto.imagem.ImagemCarroResponse;
 import com.reginaldo.apisistemavendacarros.repository.*;
 import com.reginaldo.apisistemavendacarros.specification.CarroSpecification;
-import com.reginaldo.apisistemavendacarros.dto.CarroFiltro;
-import com.reginaldo.apisistemavendacarros.dto.CarroRequest;
-import com.reginaldo.apisistemavendacarros.dto.CarroResponse;
+import com.reginaldo.apisistemavendacarros.dto.carro.CarroFiltro;
+import com.reginaldo.apisistemavendacarros.dto.carro.CarroRequest;
+import com.reginaldo.apisistemavendacarros.dto.carro.CarroResponse;
 import com.reginaldo.apisistemavendacarros.entity.Carro;
 import com.reginaldo.apisistemavendacarros.entity.Categoria;
 import com.reginaldo.apisistemavendacarros.entity.Cor;
@@ -136,12 +136,12 @@ public class CarroService {
         @Transactional
         public void excluir(UUID id) {
 
-            // Bloqueia o carro para que nenhuma compra seja criada entre a verificação e a exclusão
+            // Bloqueia o carro para nenhuma compra ser criada entre a verificação e a exclusão
             Carro carro = carroRepository.findByIdComBloqueio(id)
                     .orElseThrow(() ->
                             new RecursoNaoEncontradoException("Carro não encontrado"));
 
-            // Compras (e seus pagamentos/parcelas) são histórico financeiro e bloqueiam a exclusão
+            // Compras são histórico financeiro e impedem a exclusão
             if (compraRepository.existsByCarroId(id)) {
                 throw new ValorInvalidoException("Carro possui compras registradas e não pode ser excluído");
             }
@@ -155,8 +155,7 @@ public class CarroService {
             imagemCarroRepository.deleteAll(carro.getImagens());
             carroRepository.delete(carro);
 
-            // Os arquivos do S3 só são apagados depois que o banco confirmar a exclusão;
-            // se algo falhar no banco, nenhuma imagem é perdida
+            // Imagens do S3 só são apagadas depois do commit: se o banco falhar, nada é perdido
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {

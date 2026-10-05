@@ -1,16 +1,20 @@
 package com.reginaldo.apisistemavendacarros.service;
 
-import com.reginaldo.apisistemavendacarros.dto.UsuarioRequest;
-import com.reginaldo.apisistemavendacarros.dto.UsuarioResponse;
+import com.reginaldo.apisistemavendacarros.dto.usuario.UsuarioRequest;
+import com.reginaldo.apisistemavendacarros.dto.usuario.UsuarioResponse;
 import com.reginaldo.apisistemavendacarros.entity.Usuario;
 import com.reginaldo.apisistemavendacarros.enums.PerfilUsuario;
 import com.reginaldo.apisistemavendacarros.enums.ProvedorAutenticacao;
+import com.reginaldo.apisistemavendacarros.event.UsuarioCadastradoEvent;
 import com.reginaldo.apisistemavendacarros.exception.ConflitoException;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.exception.ValorInvalidoException;
 import com.reginaldo.apisistemavendacarros.mapper.UsuarioMapper;
 import com.reginaldo.apisistemavendacarros.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +30,7 @@ public class UsuarioService {
     private final ClienteService clienteService;
     private final UsuarioMapper mapper;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public UsuarioResponse cadastro (UsuarioRequest request) {
@@ -39,15 +44,13 @@ public class UsuarioService {
         usuario.setProvedor(ProvedorAutenticacao.LOCAL);
 
         usuarioRepository.save(usuario);
+        eventPublisher.publishEvent(new UsuarioCadastradoEvent(usuario.getEmail(), usuario.getNomeCompleto()));
 
         return mapper.toResponse(usuario);
     }
 
-    public List<UsuarioResponse> listar () {
-        List<Usuario> usuarios = usuarioRepository.findAll();
-        return usuarios.stream()
-                .map(mapper::toResponse)
-                .toList();
+    public Page<UsuarioResponse> listar (Pageable pageable) {
+        return usuarioRepository.findAll(pageable).map(mapper::toResponse);
     }
 
     public UsuarioResponse buscarPorId (UUID id) {
@@ -62,7 +65,7 @@ public class UsuarioService {
             throw new ConflitoException("E-mail já cadastrado");
         }
 
-        // O login pelo Google localiza o usuário pelo e-mail; trocar o e-mail criaria uma segunda conta
+        // O login pelo Google localiza o usuário pelo e-mail; trocar o e-mail criaria outra conta
         if (usuario.getProvedor() != ProvedorAutenticacao.LOCAL && !usuario.getEmail().equals(request.email())) {
             throw new ValorInvalidoException("E-mail de conta vinculada ao " + usuario.getProvedor() + " não pode ser alterado");
         }
@@ -75,7 +78,7 @@ public class UsuarioService {
         return mapper.toResponse(usuario);
     }
 
-    // Remove junto o Cliente do usuário, pelas regras do ClienteService (bloqueia se houver compras)
+    // Remove junto o cliente do usuário (bloqueia se houver compras)
     @Transactional
     public void excluir (UUID id) {
         Usuario usuario = buscarUsuario(id);

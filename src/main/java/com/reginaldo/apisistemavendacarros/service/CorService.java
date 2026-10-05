@@ -1,7 +1,7 @@
 package com.reginaldo.apisistemavendacarros.service;
 
-import com.reginaldo.apisistemavendacarros.dto.CorRequest;
-import com.reginaldo.apisistemavendacarros.dto.CorResponse;
+import com.reginaldo.apisistemavendacarros.dto.cor.CorRequest;
+import com.reginaldo.apisistemavendacarros.dto.cor.CorResponse;
 import com.reginaldo.apisistemavendacarros.entity.Cor;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.CorMapper;

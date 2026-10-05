@@ -1,6 +1,6 @@
 package com.reginaldo.apisistemavendacarros.service;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -16,18 +16,24 @@ import java.time.Duration;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class S3Service {
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
+    private final String bucket;
+
+    public S3Service(S3Client s3Client, S3Presigner s3Presigner, @Value("${aws.s3.bucket}") String bucket) {
+        this.s3Client = s3Client;
+        this.s3Presigner = s3Presigner;
+        this.bucket = bucket;
+    }
 
     public String upload (MultipartFile arquivo) throws IOException {
 
         String nomeArquivo = UUID.randomUUID() + "_" + arquivo.getOriginalFilename();
 
         PutObjectRequest request = PutObjectRequest.builder()
-                .bucket("sistema-venda-carros-imagens-reginaldo")
+                .bucket(bucket)
                 .key(nomeArquivo)
                 .contentType(arquivo.getContentType())
                 .build();
@@ -46,7 +52,7 @@ public class S3Service {
     public String gerarUrl(String nomeArquivo) {
 
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket("sistema-venda-carros-imagens-reginaldo")
+                .bucket(bucket)
                 .key(nomeArquivo)
                 .build();
 
@@ -63,12 +69,10 @@ public class S3Service {
     public void excluir(String chaveArquivo) {
 
         DeleteObjectRequest request = DeleteObjectRequest.builder()
-                .bucket("sistema-venda-carros-imagens-reginaldo")
+                .bucket(bucket)
                 .key(chaveArquivo)
                 .build();
 
         s3Client.deleteObject(request);
     }
-
-
 }

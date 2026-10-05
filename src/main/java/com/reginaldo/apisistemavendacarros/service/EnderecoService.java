@@ -1,7 +1,7 @@
 package com.reginaldo.apisistemavendacarros.service;
 
-import com.reginaldo.apisistemavendacarros.dto.EnderecoRequest;
-import com.reginaldo.apisistemavendacarros.dto.EnderecoResponse;
+import com.reginaldo.apisistemavendacarros.dto.endereco.EnderecoRequest;
+import com.reginaldo.apisistemavendacarros.dto.endereco.EnderecoResponse;
 import com.reginaldo.apisistemavendacarros.entity.Cliente;
 import com.reginaldo.apisistemavendacarros.entity.Endereco;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
@@ -88,7 +88,7 @@ public class EnderecoService {
         Endereco endereco = buscarEnderecoDoCliente(id, cliente.getId());
 
         enderecoRepository.delete(endereco);
-        // Garante que o DELETE seja executado antes de promover outro endereço a principal
+        // Executa o DELETE antes de promover outro endereço a principal
         enderecoRepository.flush();
 
         if (endereco.getPrincipal()) {

@@ -1,7 +1,7 @@
 package com.reginaldo.apisistemavendacarros.service;
 
-import com.reginaldo.apisistemavendacarros.dto.ClienteRequest;
-import com.reginaldo.apisistemavendacarros.dto.ClienteResponse;
+import com.reginaldo.apisistemavendacarros.dto.cliente.ClienteRequest;
+import com.reginaldo.apisistemavendacarros.dto.cliente.ClienteResponse;
 import com.reginaldo.apisistemavendacarros.entity.Cliente;
 import com.reginaldo.apisistemavendacarros.entity.Usuario;
 import com.reginaldo.apisistemavendacarros.exception.ConflitoException;
@@ -15,6 +15,8 @@ import com.reginaldo.apisistemavendacarros.repository.FavoritoRepository;
 import com.reginaldo.apisistemavendacarros.repository.InteresseCarroRepository;
 import com.reginaldo.apisistemavendacarros.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,11 +56,8 @@ public class ClienteService {
         return mapper.toResponse(cliente);
     }
 
-    public List<ClienteResponse> listar () {
-        List<Cliente> clientes = clienteRepository.findAll();
-        return clientes.stream()
-                .map(mapper::toResponse)
-                .toList();
+    public Page<ClienteResponse> listar (Pageable pageable) {
+        return clienteRepository.findAll(pageable).map(mapper::toResponse);
     }
 
     public ClienteResponse buscarPorId (UUID id) {
@@ -100,14 +99,14 @@ public class ClienteService {
         excluirComDependentes(cliente);
     }
 
-    // Usado na exclusão do Usuario: remove o Cliente dele, se existir, pelas mesmas regras
+    // Usado na exclusão do usuário
     @Transactional
     public void excluirSeExistir (UUID usuarioId) {
         clienteRepository.findByUsuarioId(usuarioId).ifPresent(this::excluirComDependentes);
     }
 
-    // Compras (e seus pagamentos/parcelas) são histórico financeiro e bloqueiam a exclusão.
-    // Favoritos, interesses e endereços não são histórico e são apagados junto.
+    // Compras são histórico financeiro e impedem a exclusão.
+    // Favoritos, interesses e endereços são apagados junto
     private void excluirComDependentes (Cliente cliente) {
         if (compraRepository.existsByClienteId(cliente.getId())) {
             throw new ValorInvalidoException("Cliente possui compras registradas e não pode ser excluído");

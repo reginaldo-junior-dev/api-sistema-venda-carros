@@ -1,12 +1,14 @@
 package com.reginaldo.apisistemavendacarros.service;
 
-import com.reginaldo.apisistemavendacarros.dto.CompraResponse;
+import com.reginaldo.apisistemavendacarros.dto.compra.CompraResponse;
 import com.reginaldo.apisistemavendacarros.entity.Carro;
 import com.reginaldo.apisistemavendacarros.entity.Cliente;
 import com.reginaldo.apisistemavendacarros.entity.Compra;
 import com.reginaldo.apisistemavendacarros.enums.StatusCarro;
 import com.reginaldo.apisistemavendacarros.enums.StatusCompra;
 import com.reginaldo.apisistemavendacarros.enums.StatusPagamento;
+import com.reginaldo.apisistemavendacarros.event.CompraAprovadaEvent;
+import com.reginaldo.apisistemavendacarros.event.CompraExpiradaEvent;
 import com.reginaldo.apisistemavendacarros.exception.ConflitoException;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.exception.ValorInvalidoException;
@@ -16,6 +18,9 @@ import com.reginaldo.apisistemavendacarros.repository.ClienteRepository;
 import com.reginaldo.apisistemavendacarros.repository.CompraRepository;
 import com.reginaldo.apisistemavendacarros.repository.PagamentoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +38,8 @@ public class CompraService {
     private final CarroRepository carroRepository;
     private final PagamentoRepository pagamentoRepository;
     private final CompraMapper mapper;
+    private final StripeService stripeService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public CompraResponse cadastro (UUID usuarioId, UUID carroId) {
@@ -50,7 +57,7 @@ public class CompraService {
             throw new ConflitoException("Carro já possui uma compra em andamento");
         }
 
-        // O valor é copiado do preço atual; alterações futuras no preço do carro não afetam a compra
+        // Preço copiado do carro: mudanças futuras no preço não afetam a compra
         Compra compra = new Compra();
         compra.setCliente(cliente);
         compra.setCarro(carro);
@@ -64,20 +71,15 @@ public class CompraService {
         return mapper.toResponse(compra);
     }
 
-    public List<CompraResponse> listarPorUsuario (UUID usuarioId) {
+    public Page<CompraResponse> listarPorUsuario (UUID usuarioId, Pageable pageable) {
         Cliente cliente = clienteRepository.findByUsuarioId(usuarioId).orElseThrow(() ->
                 new RecursoNaoEncontradoException("Cliente não encontrado"));
 
-        return compraRepository.findByClienteId(cliente.getId()).stream()
-                .map(mapper::toResponse)
-                .toList();
+        return compraRepository.findByClienteId(cliente.getId(), pageable).map(mapper::toResponse);
     }
 
-    public List<CompraResponse> listar () {
-        List<Compra> compras = compraRepository.findAll();
-        return compras.stream()
-                .map(mapper::toResponse)
-                .toList();
+    public Page<CompraResponse> listar (Pageable pageable) {
+        return compraRepository.findAll(pageable).map(mapper::toResponse);
     }
 
     public CompraResponse buscarPorId (UUID id) {
@@ -87,7 +89,7 @@ public class CompraService {
         return mapper.toResponse(compra);
     }
 
-    // Sem endpoint próprio: a compra só é aprovada pela aprovação de um Pagamento (PagamentoService.aprovar)
+    // Sem endpoint: a compra só é aprovada pela aprovação de um pagamento
     @Transactional
     public CompraResponse aprovar (UUID id) {
         Compra compra = buscarCompraPendente(id);
@@ -100,13 +102,39 @@ public class CompraService {
         compra.setStatus(StatusCompra.APROVADA);
         carro.setStatus(StatusCarro.VENDIDO);
 
+        // E-mail sai só após o commit (EmailListener)
+        eventPublisher.publishEvent(new CompraAprovadaEvent(compra.getCliente().getUsuario().getEmail(),
+                compra.getCliente().getUsuario().getNomeCompleto(), carro.getNome(), compra.getValorTotal()));
+
         return mapper.toResponse(compra);
     }
 
     @Transactional
     public CompraResponse cancelar (UUID id) {
+        return mapper.toResponse(cancelarPendente(id));
+    }
+
+    // Chamado pelo job de expiração: cancela e avisa o cliente (e-mail após o commit)
+    @Transactional
+    public void expirar (UUID id) {
+        Compra compra = cancelarPendente(id);
+
+        eventPublisher.publishEvent(new CompraExpiradaEvent(compra.getCliente().getUsuario().getEmail(),
+                compra.getCliente().getUsuario().getNomeCompleto(), compra.getCarro().getNome(), compra.getValorTotal()));
+    }
+
+    private Compra cancelarPendente (UUID id) {
         Compra compra = buscarCompraPendente(id);
         Carro carro = compra.getCarro();
+
+        // Cancela na Stripe antes de alterar a compra: se ela já estiver processando, nada muda
+        pagamentoRepository.findByCompraIdAndStatus(compra.getId(), StatusPagamento.PENDENTE)
+                .forEach(pagamento -> {
+                    if (pagamento.getIdExterno() != null) {
+                        stripeService.garantirCancelamento(pagamento.getIdExterno());
+                    }
+                    pagamento.setStatus(StatusPagamento.CANCELADO);
+                });
 
         compra.setStatus(StatusCompra.CANCELADA);
 
@@ -114,11 +142,7 @@ public class CompraService {
             carro.setStatus(StatusCarro.DISPONIVEL);
         }
 
-        // Pagamentos pendentes não podem mais ser aprovados; RECUSADO/CANCELADO ficam como estão
-        pagamentoRepository.findByCompraIdAndStatus(compra.getId(), StatusPagamento.PENDENTE)
-                .forEach(pagamento -> pagamento.setStatus(StatusPagamento.CANCELADO));
-
-        return mapper.toResponse(compra);
+        return compra;
     }
 
     private Compra buscarCompraPendente (UUID id) {
@@ -131,4 +155,6 @@ public class CompraService {
 
         return compra;
     }
+
+
 }

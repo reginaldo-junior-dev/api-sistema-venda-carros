@@ -1,7 +1,7 @@
 package com.reginaldo.apisistemavendacarros.service;
 
-import com.reginaldo.apisistemavendacarros.dto.ModeloRequest;
-import com.reginaldo.apisistemavendacarros.dto.ModeloResponse;
+import com.reginaldo.apisistemavendacarros.dto.modelo.ModeloRequest;
+import com.reginaldo.apisistemavendacarros.dto.modelo.ModeloResponse;
 import com.reginaldo.apisistemavendacarros.entity.Marca;
 import com.reginaldo.apisistemavendacarros.entity.Modelo;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;

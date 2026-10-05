@@ -1,6 +1,6 @@
 package com.reginaldo.apisistemavendacarros.service;
 
-import com.reginaldo.apisistemavendacarros.dto.FavoritoResponse;
+import com.reginaldo.apisistemavendacarros.dto.favorito.FavoritoResponse;
 import com.reginaldo.apisistemavendacarros.entity.Carro;
 import com.reginaldo.apisistemavendacarros.entity.Cliente;
 import com.reginaldo.apisistemavendacarros.entity.Favorito;
@@ -13,6 +13,8 @@ import com.reginaldo.apisistemavendacarros.repository.CarroRepository;
 import com.reginaldo.apisistemavendacarros.repository.ClienteRepository;
 import com.reginaldo.apisistemavendacarros.repository.FavoritoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,12 +54,10 @@ public class FavoritoService {
         return mapper.toResponse(favorito);
     }
 
-    public List<FavoritoResponse> listarPorUsuario (UUID usuarioId) {
+    public Page<FavoritoResponse> listarPorUsuario (UUID usuarioId, Pageable pageable) {
         Cliente cliente = buscarClienteDoUsuario(usuarioId);
 
-        return favoritoRepository.findByClienteId(cliente.getId()).stream()
-                .map(mapper::toResponse)
-                .toList();
+        return favoritoRepository.findByClienteId(cliente.getId(), pageable).map(mapper::toResponse);
     }
 
     @Transactional

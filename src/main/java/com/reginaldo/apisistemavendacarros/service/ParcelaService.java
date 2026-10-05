@@ -1,6 +1,6 @@
 package com.reginaldo.apisistemavendacarros.service;
 
-import com.reginaldo.apisistemavendacarros.dto.ParcelaResponse;
+import com.reginaldo.apisistemavendacarros.dto.parcela.ParcelaResponse;
 import com.reginaldo.apisistemavendacarros.entity.Pagamento;
 import com.reginaldo.apisistemavendacarros.entity.Parcela;
 import com.reginaldo.apisistemavendacarros.entity.Usuario;
@@ -37,7 +37,7 @@ public class ParcelaService {
 
     @Transactional
     public List<ParcelaResponse> criarParcelas (UUID pagamentoId, int quantidade) {
-        // Bloqueia o pagamento para que duas requisições simultâneas não gerem parcelas duplicadas
+        // Bloqueia o pagamento para duas requisições simultâneas não gerarem parcelas duplicadas
         Pagamento pagamento = pagamentoRepository.findByIdComBloqueio(pagamentoId).orElseThrow(() ->
                 new RecursoNaoEncontradoException("Pagamento não encontrado"));
 
@@ -117,8 +117,7 @@ public class ParcelaService {
         return mapper.toResponse(parcela);
     }
 
-    // Divide sem arredondar para cima e coloca a sobra de centavos na última parcela,
-    // garantindo que a soma seja exatamente o valor do pagamento
+    // A sobra de centavos vai para a última parcela, para a soma bater com o valor do pagamento
     private List<BigDecimal> dividirValor (BigDecimal total, int quantidade) {
         BigDecimal valorBase = total.divide(BigDecimal.valueOf(quantidade), 2, RoundingMode.DOWN);
         BigDecimal ultima = total.subtract(valorBase.multiply(BigDecimal.valueOf(quantidade - 1)));
@@ -138,7 +137,7 @@ public class ParcelaService {
 
         UUID donoId = pagamento.getCompra().getCliente().getUsuario().getId();
         if (!donoId.equals(usuario.getId())) {
-            // Tratada pelo Spring Security e convertida em 403
+            // Convertida em 403 pelo Spring Security
             throw new AccessDeniedException("Parcela não pertence ao cliente autenticado");
         }
     }

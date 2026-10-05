@@ -1,7 +1,7 @@
 package com.reginaldo.apisistemavendacarros.service;
 
-import com.reginaldo.apisistemavendacarros.dto.CategoriaRequest;
-import com.reginaldo.apisistemavendacarros.dto.CategoriaResponse;
+import com.reginaldo.apisistemavendacarros.dto.categoria.CategoriaRequest;
+import com.reginaldo.apisistemavendacarros.dto.categoria.CategoriaResponse;
 import com.reginaldo.apisistemavendacarros.entity.Categoria;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.CategoriaMapper;

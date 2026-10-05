@@ -1,7 +1,7 @@
 package com.reginaldo.apisistemavendacarros.service;
 
-import com.reginaldo.apisistemavendacarros.dto.LoginRequest;
-import com.reginaldo.apisistemavendacarros.dto.LoginResponse;
+import com.reginaldo.apisistemavendacarros.dto.login.LoginRequest;
+import com.reginaldo.apisistemavendacarros.dto.login.LoginResponse;
 import com.reginaldo.apisistemavendacarros.entity.Usuario;
 import com.reginaldo.apisistemavendacarros.security.JwtService;
 import com.reginaldo.apisistemavendacarros.security.UsuarioDetails;

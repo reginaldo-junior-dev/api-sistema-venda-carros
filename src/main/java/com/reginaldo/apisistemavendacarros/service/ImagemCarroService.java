@@ -1,6 +1,6 @@
 package com.reginaldo.apisistemavendacarros.service;
 
-import com.reginaldo.apisistemavendacarros.dto.ImagemCarroResponse;
+import com.reginaldo.apisistemavendacarros.dto.imagem.ImagemCarroResponse;
 import com.reginaldo.apisistemavendacarros.entity.Carro;
 import com.reginaldo.apisistemavendacarros.entity.ImagemCarro;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
