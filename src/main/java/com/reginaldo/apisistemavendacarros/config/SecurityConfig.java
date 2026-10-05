@@ -45,14 +45,16 @@ public class SecurityConfig {
                         .accessDeniedHandler(respostaErroSeguranca.acessoNegado())
                 )
                 .authorizeHttpRequests(authorize -> authorize
+                        // Chamado pela Stripe, sem JWT: a origem é validada pelo header Stripe-Signature
+                        .requestMatchers(HttpMethod.POST, "/stripe/webhook").permitAll()
                         .requestMatchers(HttpMethod.GET, "/carro/imagens/*/url").permitAll()
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/usuario").permitAll()
                         .requestMatchers("/usuario/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/usuario", "/usuario/*").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/usuario/*").hasRole("ADMINISTRADOR")
-                        // Precisa vir antes das regras de /carro/** para não cair na exigência de ADMINISTRADOR
                         .requestMatchers(HttpMethod.POST, "/carro/*/favorito").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/carro/*/favorito").authenticated()
                         .requestMatchers(HttpMethod.GET, "/cliente/me/favoritos").authenticated()
@@ -63,8 +65,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/cliente/me/compras").authenticated()
                         .requestMatchers("/compra", "/compra/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/pagamento").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/pagamento/cartao").authenticated()
                         .requestMatchers(HttpMethod.GET, "/cliente/me/pagamentos").authenticated()
-                        // Consultas de parcela: autenticado aqui; o ParcelaService verifica se é admin ou dono da compra
+                        // O ParcelaService verifica se é admin ou dono da compra
                         .requestMatchers(HttpMethod.GET, "/pagamento/*/parcelas", "/parcela/*").authenticated()
                         .requestMatchers("/pagamento", "/pagamento/**").hasRole("ADMINISTRADOR")
                         .requestMatchers("/parcela", "/parcela/**").hasRole("ADMINISTRADOR")
@@ -72,17 +75,18 @@ public class SecurityConfig {
                                 "/carro", "/carro/**",
                                 "/marca", "/marca/**",
                                 "/modelo", "/modelo/**",
-                                "/categoria", "/categoria/**"
+                                "/categoria", "/categoria/**",
+                                "/cor", "/cor/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST,
-                                "/carro", "/marca", "/modelo", "/categoria",
+                                "/carro", "/marca", "/modelo", "/categoria", "/cor",
                                 "/carro/*/imagens"
                         ).hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT,
-                                "/carro/**", "/marca/**", "/modelo/**", "/categoria/**"
+                                "/carro/**", "/marca/**", "/modelo/**", "/categoria/**", "/cor/**"
                         ).hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE,
-                                "/carro/**", "/marca/**", "/modelo/**", "/categoria/**"
+                                "/carro/**", "/marca/**", "/modelo/**", "/categoria/**", "/cor/**"
                         ).hasRole("ADMINISTRADOR")
                         .requestMatchers("/cliente/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/cliente", "/cliente/*", "/cliente/*/enderecos").hasRole("ADMINISTRADOR")
