@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static com.reginaldo.apisistemavendacarros.CsrfReal.tokenCsrf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -84,7 +84,7 @@ class CorControllerTest {
 
     @Test
     void semAutenticacaoNaoCriaCor() throws Exception {
-        mockMvc.perform(post("/cor").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"nome\":\"Roxo\"}"))
+        mockMvc.perform(post("/cor").with(tokenCsrf(mockMvc)).contentType(MediaType.APPLICATION_JSON).content("{\"nome\":\"Roxo\"}"))
                 .andExpect(status().isUnauthorized());
     }
 

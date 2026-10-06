@@ -22,7 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static com.reginaldo.apisistemavendacarros.CsrfReal.tokenCsrf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -194,7 +194,7 @@ class PagamentoControllerTest {
 
     @Test
     void criarSemAutenticacaoRetorna401() throws Exception {
-        mockMvc.perform(post("/pagamento").with(csrf())
+        mockMvc.perform(post("/pagamento").with(tokenCsrf(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"compraId\":\"%s\",\"metodo\":\"PIX\"}".formatted(compra.getId())))
                 .andExpect(status().isUnauthorized());

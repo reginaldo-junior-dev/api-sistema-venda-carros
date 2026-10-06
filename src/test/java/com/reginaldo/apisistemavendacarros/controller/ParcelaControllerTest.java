@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static com.reginaldo.apisistemavendacarros.CsrfReal.tokenCsrf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -369,7 +369,7 @@ class ParcelaControllerTest {
 
         mockMvc.perform(get("/pagamento/" + pagamento.getId() + "/parcelas")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/parcela/" + parcela.getId())).andExpect(status().isUnauthorized());
-        mockMvc.perform(put("/parcela/" + parcela.getId() + "/pagar").with(csrf())).andExpect(status().isUnauthorized());
+        mockMvc.perform(put("/parcela/" + parcela.getId() + "/pagar").with(tokenCsrf(mockMvc))).andExpect(status().isUnauthorized());
     }
 
     @Test

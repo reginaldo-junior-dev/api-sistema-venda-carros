@@ -16,7 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static com.reginaldo.apisistemavendacarros.CsrfReal.tokenCsrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -44,7 +44,7 @@ class AuthControllerTest {
     }
 
     private MockHttpServletResponse login() throws Exception {
-        return mockMvc.perform(post("/auth/login").with(csrf())
+        return mockMvc.perform(post("/auth/login").with(tokenCsrf(mockMvc))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"%s\",\"senha\":\"%s\"}".formatted(usuario.getEmail(), DadosTeste.SENHA)))
                 .andExpect(status().isOk())
@@ -81,7 +81,7 @@ class AuthControllerTest {
         mockMvc.perform(put("/usuario/me").cookie(sessao).contentType(MediaType.APPLICATION_JSON).content(corpo))
                 .andExpect(status().isForbidden());
 
-        mockMvc.perform(put("/usuario/me").cookie(sessao).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(corpo))
+        mockMvc.perform(put("/usuario/me").cookie(sessao).with(tokenCsrf(mockMvc)).contentType(MediaType.APPLICATION_JSON).content(corpo))
                 .andExpect(status().isOk());
     }
 
@@ -105,7 +105,7 @@ class AuthControllerTest {
 
     @Test
     void logoutApagaOCookie() throws Exception {
-        String setCookie = mockMvc.perform(post("/auth/logout").with(csrf()))
+        String setCookie = mockMvc.perform(post("/auth/logout").with(tokenCsrf(mockMvc)))
                 .andExpect(status().isNoContent())
                 .andReturn().getResponse().getHeader("Set-Cookie");
 

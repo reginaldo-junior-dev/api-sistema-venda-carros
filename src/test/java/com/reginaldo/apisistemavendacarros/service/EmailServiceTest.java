@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static com.reginaldo.apisistemavendacarros.CsrfReal.tokenCsrf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -169,7 +169,7 @@ class EmailServiceTest {
     }
 
     private ResultActions cadastrar(String email) throws Exception {
-        return mockMvc.perform(post("/usuario").with(csrf())
+        return mockMvc.perform(post("/usuario").with(tokenCsrf(mockMvc))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                         {"nomeCompleto": "Maria", "email": "%s", "senha": "minhaSenha"}
