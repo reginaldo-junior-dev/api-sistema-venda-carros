@@ -1,6 +1,7 @@
 package com.reginaldo.apisistemavendacarros.config;
 
 import com.reginaldo.apisistemavendacarros.security.JwtAuthenticationFilter;
+import com.reginaldo.apisistemavendacarros.security.OAuth2LoginFalhaHandler;
 import com.reginaldo.apisistemavendacarros.security.OAuth2LoginSucessoHandler;
 import com.reginaldo.apisistemavendacarros.security.RespostaErroSeguranca;
 import com.reginaldo.apisistemavendacarros.security.UsuarioDetailsService;
@@ -24,6 +25,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final OAuth2LoginSucessoHandler oAuth2LoginSucessoHandler;
+    private final OAuth2LoginFalhaHandler oAuth2LoginFalhaHandler;
     private final UsuarioDetailsService usuarioDetailsService;
     private final RespostaErroSeguranca respostaErroSeguranca;
 
@@ -39,7 +41,10 @@ public class SecurityConfig {
                         UsernamePasswordAuthenticationFilter.class
                 )
                 .csrf(csrf -> csrf.disable())
-                .oauth2Login(oauth2 -> oauth2.successHandler(oAuth2LoginSucessoHandler))
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(oAuth2LoginSucessoHandler)
+                        .failureHandler(oAuth2LoginFalhaHandler)
+                )
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(respostaErroSeguranca.naoAutenticado())
                         .accessDeniedHandler(respostaErroSeguranca.acessoNegado())

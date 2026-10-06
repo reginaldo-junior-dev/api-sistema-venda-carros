@@ -8,10 +8,12 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 
 @Component
@@ -21,13 +23,14 @@ public class OAuth2LoginSucessoHandler implements AuthenticationSuccessHandler {
     private final UsuarioRepository usuarioRepository;
     private final JwtService jwtService;
 
+    // Endereço do front: o login termina na página /oauth/callback, que guarda o token e limpa a URL
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
 
         OAuth2User usuario = (OAuth2User) authentication.getPrincipal();
-
-        System.out.println("Nome: " + usuario.getAttribute("name"));
-        System.out.println("Email: " + usuario.getAttribute("email"));
 
         String email = usuario.getAttribute("email");
 
@@ -37,9 +40,6 @@ public class OAuth2LoginSucessoHandler implements AuthenticationSuccessHandler {
         if (usuario1 != null) {
             usuarioFinal = usuario1;
         } else {
-            System.out.println("Nome: " + usuario.getAttribute("name"));
-            System.out.println("Email: " + usuario.getAttribute("email"));
-
             Usuario novoUsuario = new Usuario();
             novoUsuario.setNomeCompleto(usuario.getAttribute("name"));
             novoUsuario.setEmail(usuario.getAttribute("email"));
@@ -51,6 +51,13 @@ public class OAuth2LoginSucessoHandler implements AuthenticationSuccessHandler {
         }
            String token = jwtService.gerarToken(usuarioFinal);
 
-           response.getWriter().write("Login Google realizado com sucesso!\nToken:" + token);
+           String destino = UriComponentsBuilder.fromUriString(frontendUrl)
+                   .path("/oauth/callback")
+                   .queryParam("token", token)
+                   .build()
+                   .encode()
+                   .toUriString();
+
+           response.sendRedirect(destino);
     }
 }

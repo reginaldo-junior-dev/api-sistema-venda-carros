@@ -1,6 +1,7 @@
 package com.reginaldo.apisistemavendacarros.config;
 
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -12,11 +13,12 @@ import java.util.List;
 public class CorsConfig {
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource () {
+    public CorsConfigurationSource corsConfigurationSource (@Value("${app.frontend-url}") String frontendUrl) {
 
         CorsConfiguration corsConfiguration = new CorsConfiguration();
 
-        corsConfiguration.addAllowedOrigin("http://localhost:5173");
+        // Só o front configurado pode chamar a API pelo navegador
+        corsConfiguration.addAllowedOrigin(frontendUrl);
 
         corsConfiguration.setAllowedMethods(
                 List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")
