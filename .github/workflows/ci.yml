@@ -1,0 +1,65 @@
+# Roda todos os testes a cada push e pull request na main.
+# O resultado aparece como ✓ ou ✗ ao lado de cada commit no GitHub.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    # Banco só desta execução: o Flyway cria as tabelas pelas migrações ao subir a aplicação
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: venda_carros
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # Valores falsos: os testes não chamam Google, Stripe, S3 nem SMTP de verdade (StripeClient mockado, e-mail desligado)
+    env:
+      VENDA_CARROS_DB_URL: jdbc:postgresql://localhost:5432/venda_carros
+      VENDA_CARROS_DB_USERNAME: ci
+      VENDA_CARROS_DB_PASSWORD: ci
+      JWT_SECRET: segredo-falso-usado-so-nos-testes-do-ci
+      GOOGLE_CLIENT_ID: cliente-falso-ci
+      GOOGLE_CLIENT_SECRET: segredo-falso-ci
+      STRIPE_SECRET_KEY: chave-falsa-ci
+      STRIPE_WEBHOOK_SECRET: segredo-webhook-falso-ci
+      AWS_ACCESS_KEY_ID: chave-falsa-ci
+      AWS_SECRET_ACCESS_KEY: segredo-falso-ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Mesma versão do <java.version> do pom.xml
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Testes
+        run: ./mvnw -B test
+
+      # Relatórios do Surefire com o motivo de cada falha, para baixar na página da execução
+      - name: Guarda os relatórios quando algum teste falha
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios-testes
+          path: target/surefire-reports/
+          retention-days: 7
