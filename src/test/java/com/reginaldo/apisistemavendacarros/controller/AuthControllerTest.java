@@ -126,6 +126,9 @@ class AuthControllerTest {
         // Sem isso, o primeiro POST do site (login, cadastro) seria recusado por falta do token
         MockHttpServletResponse resposta = mockMvc.perform(get("/carro")).andReturn().getResponse();
 
-        assertThat(resposta.getCookie("XSRF-TOKEN")).isNotNull();
+        // A mensagem mostra o que a API respondeu, para a falha (se houver) explicar a si mesma no CI
+        assertThat(resposta.getHeaders("Set-Cookie"))
+                .as("status %d, cookies recebidos: %s", resposta.getStatus(), resposta.getHeaders("Set-Cookie"))
+                .anySatisfy(cookie -> assertThat(cookie).startsWith("XSRF-TOKEN="));
     }
 }

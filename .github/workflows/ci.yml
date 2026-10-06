@@ -59,8 +59,8 @@ jobs:
       - name: Lista os testes que falharam
         if: failure()
         run: |
-          grep -h -A1 -E "<<< (FAILURE|ERROR)!" target/surefire-reports/*.txt \
-            | grep -v -- "^--$" | paste - - | cut -c1-600 \
+          grep -h -A4 -E "<<< (FAILURE|ERROR)!" target/surefire-reports/*.txt \
+            | grep -v -- "^--$" | paste - - - - - | cut -c1-900 \
             | while IFS= read -r linha; do echo "::error title=Teste falhou::$linha"; done || true
 
       # Relatórios do Surefire com o motivo de cada falha, para baixar na página da execução
