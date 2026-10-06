@@ -1,5 +1,6 @@
 package com.reginaldo.apisistemavendacarros.controller;
 
+import com.reginaldo.apisistemavendacarros.dto.usuario.UsuarioAtualizacaoRequest;
 import com.reginaldo.apisistemavendacarros.dto.usuario.UsuarioRequest;
 import com.reginaldo.apisistemavendacarros.dto.usuario.UsuarioResponse;
 import com.reginaldo.apisistemavendacarros.entity.Usuario;
@@ -48,7 +49,7 @@ public class UsuarioController {
 
     @PutMapping("/me")
     @Operation(summary = "Atualizar minha conta")
-    public ResponseEntity<UsuarioResponse> atualizarUsuarioLogado (@AuthenticationPrincipal Usuario usuario, @Valid @RequestBody UsuarioRequest request) {
+    public ResponseEntity<UsuarioResponse> atualizarUsuarioLogado (@AuthenticationPrincipal Usuario usuario, @Valid @RequestBody UsuarioAtualizacaoRequest request) {
         UsuarioResponse usuarioResponse = usuarioService.atualizar(usuario.getId(), request);
         return ResponseEntity.ok(usuarioResponse);
     }

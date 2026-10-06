@@ -1,16 +1,20 @@
 package com.reginaldo.apisistemavendacarros.service;
 
+import com.reginaldo.apisistemavendacarros.dto.usuario.UsuarioAtualizacaoRequest;
 import com.reginaldo.apisistemavendacarros.dto.usuario.UsuarioRequest;
 import com.reginaldo.apisistemavendacarros.dto.usuario.UsuarioResponse;
 import com.reginaldo.apisistemavendacarros.entity.Usuario;
 import com.reginaldo.apisistemavendacarros.enums.PerfilUsuario;
 import com.reginaldo.apisistemavendacarros.enums.ProvedorAutenticacao;
 import com.reginaldo.apisistemavendacarros.event.UsuarioCadastradoEvent;
+import com.reginaldo.apisistemavendacarros.exception.CampoInvalidoException;
 import com.reginaldo.apisistemavendacarros.exception.ConflitoException;
+import com.reginaldo.apisistemavendacarros.exception.MuitasTentativasException;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.exception.ValorInvalidoException;
 import com.reginaldo.apisistemavendacarros.mapper.UsuarioMapper;
 import com.reginaldo.apisistemavendacarros.repository.UsuarioRepository;
+import com.reginaldo.apisistemavendacarros.security.LimiteTentativas;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -31,6 +35,7 @@ public class UsuarioService {
     private final UsuarioMapper mapper;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
+    private final LimiteTentativas limiteTentativas;
 
     @Transactional
     public UsuarioResponse cadastro (UsuarioRequest request) {
@@ -58,7 +63,7 @@ public class UsuarioService {
     }
 
     @Transactional
-    public UsuarioResponse atualizar (UUID id, UsuarioRequest request) {
+    public UsuarioResponse atualizar (UUID id, UsuarioAtualizacaoRequest request) {
         Usuario usuario = buscarUsuario(id);
 
         if (usuarioRepository.existsByEmailAndIdNot(request.email(), id)) {
@@ -70,8 +75,19 @@ public class UsuarioService {
             throw new ValorInvalidoException("E-mail de conta vinculada ao " + usuario.getProvedor() + " não pode ser alterado");
         }
 
-        mapper.atualizar(request, usuario);
-        usuario.setSenha(passwordEncoder.encode(request.senha()));
+        boolean trocaEmail = !usuario.getEmail().equals(request.email());
+        boolean trocaSenha = request.novaSenha() != null && !request.novaSenha().isBlank();
+
+        // E-mail e senha dão acesso à conta: só mudam com a senha atual
+        if (trocaEmail || trocaSenha) {
+            confirmarSenhaAtual(usuario, request.senhaAtual());
+        }
+
+        usuario.setNomeCompleto(request.nomeCompleto());
+        usuario.setEmail(request.email());
+        if (trocaSenha) {
+            usuario.setSenha(passwordEncoder.encode(request.novaSenha()));
+        }
 
         usuarioRepository.save(usuario);
 
@@ -85,6 +101,24 @@ public class UsuarioService {
 
         clienteService.excluirSeExistir(id);
         usuarioRepository.delete(usuario);
+    }
+
+    // Conta do Google sem senha não cria uma por aqui: com um token emprestado, daria acesso permanente à conta.
+    // Erros contam no mesmo limite do login, para a senha atual não ser descoberta por tentativa e erro
+    private void confirmarSenhaAtual (Usuario usuario, String senhaAtual) {
+        if (usuario.getSenha() == null) {
+            throw new ValorInvalidoException("Conta vinculada ao " + usuario.getProvedor() + " não tem senha para alterar");
+        }
+
+        String chave = "senha-atual:" + usuario.getId();
+        if (limiteTentativas.bloqueado(chave)) {
+            throw new MuitasTentativasException("Muitas tentativas com a senha atual errada. Aguarde alguns minutos e tente de novo.");
+        }
+        if (senhaAtual == null || !passwordEncoder.matches(senhaAtual, usuario.getSenha())) {
+            limiteTentativas.registrarFalha(chave);
+            throw new CampoInvalidoException("senhaAtual", "Senha atual incorreta");
+        }
+        limiteTentativas.limpar(chave);
     }
 
     private Usuario buscarUsuario (UUID id) {

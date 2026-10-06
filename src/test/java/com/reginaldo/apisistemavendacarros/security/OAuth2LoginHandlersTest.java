@@ -56,7 +56,7 @@ class OAuth2LoginHandlersTest {
 
         sucesso.onAuthenticationSuccess(new MockHttpServletRequest(), resposta, loginGoogle("Ana Souza", "ana@exemplo.com"));
 
-        assertThat(resposta.getRedirectedUrl()).isEqualTo(FRONT + "/oauth/callback?token=token.jwt.ana");
+        assertThat(resposta.getRedirectedUrl()).isEqualTo(FRONT + "/oauth/callback#token=token.jwt.ana");
         verify(usuarioRepository, never()).save(any());
     }
 
@@ -75,7 +75,7 @@ class OAuth2LoginHandlersTest {
                         && novo.getPerfil() == PerfilUsuario.USUARIO
                         && novo.getProvedor() == ProvedorAutenticacao.GOOGLE
                         && novo.getSenha() == null));
-        assertThat(resposta.getRedirectedUrl()).isEqualTo(FRONT + "/oauth/callback?token=token.jwt.bruno");
+        assertThat(resposta.getRedirectedUrl()).isEqualTo(FRONT + "/oauth/callback#token=token.jwt.bruno");
     }
 
     @Test

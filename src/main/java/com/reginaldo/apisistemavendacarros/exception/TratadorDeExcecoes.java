@@ -45,6 +45,26 @@ public class TratadorDeExcecoes {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erroValidacao);
     }
 
+    @ExceptionHandler(CampoInvalidoException.class)
+    public ResponseEntity<ErroValidacao> erro (CampoInvalidoException ex) {
+        ErroValidacao erroValidacao = new ErroValidacao(
+                HttpStatus.BAD_REQUEST.value(),
+                Map.of(ex.getCampo(), ex.getMessage()),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erroValidacao);
+    }
+
+    @ExceptionHandler(MuitasTentativasException.class)
+    public ResponseEntity<ErroResposta> erro (MuitasTentativasException ex) {
+        ErroResposta erroResposta = new ErroResposta(
+                HttpStatus.TOO_MANY_REQUESTS.value(),
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(erroResposta);
+    }
+
     @ExceptionHandler(ValorInvalidoException.class)
     public ResponseEntity<ErroResposta> erro (ValorInvalidoException ex) {
         ErroResposta erroResposta = new ErroResposta(

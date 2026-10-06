@@ -3,10 +3,12 @@ package com.reginaldo.apisistemavendacarros.security;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.reginaldo.apisistemavendacarros.entity.Usuario;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
@@ -16,6 +18,14 @@ public class JwtService {
 
     @Value("${JWT_SECRET}")
     private String jwtSecret;
+
+    // Com um segredo curto, dá para descobri-lo por tentativa e erro e forjar um token de administrador
+    @PostConstruct
+    void validarSegredo () {
+        if (jwtSecret == null || jwtSecret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("JWT_SECRET precisa ter pelo menos 32 caracteres. Gere um com: openssl rand -base64 48");
+        }
+    }
 
     public String gerarToken (Usuario usuario) {
         Algorithm algorithm = Algorithm.HMAC256(jwtSecret);

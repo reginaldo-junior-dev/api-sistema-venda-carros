@@ -23,7 +23,8 @@ public class OAuth2LoginSucessoHandler implements AuthenticationSuccessHandler {
     private final UsuarioRepository usuarioRepository;
     private final JwtService jwtService;
 
-    // Endereço do front: o login termina na página /oauth/callback, que guarda o token e limpa a URL
+    // Endereço do front: o login termina na página /oauth/callback, que guarda o token e limpa a URL.
+    // O token vai depois do # porque essa parte da URL não é enviada a nenhum servidor (logs, Referer)
     @Value("${app.frontend-url}")
     private String frontendUrl;
 
@@ -53,9 +54,8 @@ public class OAuth2LoginSucessoHandler implements AuthenticationSuccessHandler {
 
            String destino = UriComponentsBuilder.fromUriString(frontendUrl)
                    .path("/oauth/callback")
-                   .queryParam("token", token)
+                   .fragment("token=" + token)
                    .build()
-                   .encode()
                    .toUriString();
 
            response.sendRedirect(destino);

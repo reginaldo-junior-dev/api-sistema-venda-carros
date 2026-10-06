@@ -104,10 +104,45 @@ class UsuarioControllerTest {
     }
 
     @Test
+    void cadastroComSenhaCurtaRetorna400() throws Exception {
+        mockMvc.perform(post("/usuario")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("Maria", UUID.randomUUID() + "@teste.com", "1234567")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagens.senha").value("Senha deve ter entre 8 e 72 caracteres"));
+    }
+
+    @Test
+    void loginBloqueadoDepoisDeCincoSenhasErradas() throws Exception {
+        for (int i = 0; i < 5; i++) {
+            login(usuario.getEmail(), "senhaErrada").andExpect(status().isUnauthorized());
+        }
+
+        // Bloqueado mesmo com a senha certa, até a janela passar
+        login(usuario.getEmail(), DadosTeste.SENHA)
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.mensagem").value("Muitas tentativas de login com este e-mail. Aguarde alguns minutos e tente de novo."));
+
+        // O bloqueio é só desse e-mail
+        login(outroUsuario.getEmail(), DadosTeste.SENHA).andExpect(status().isOk());
+    }
+
+    @Test
+    void loginCertoZeraAsFalhasAnteriores() throws Exception {
+        for (int i = 0; i < 4; i++) {
+            login(usuario.getEmail(), "senhaErrada").andExpect(status().isUnauthorized());
+        }
+        login(usuario.getEmail(), DadosTeste.SENHA).andExpect(status().isOk());
+
+        login(usuario.getEmail(), "senhaErrada").andExpect(status().isUnauthorized());
+        login(usuario.getEmail(), DadosTeste.SENHA).andExpect(status().isOk());
+    }
+
+    @Test
     void atualizarMeCriptografaSenhaEPermiteLoginComSenhaNova() throws Exception {
         String novoEmail = UUID.randomUUID() + "@teste.com";
 
-        atualizarMe(usuario, json("Nome Novo", novoEmail, "senhaNova"))
+        atualizarMe(usuario, atualizacao("Nome Novo", novoEmail, DadosTeste.SENHA, "senhaNova"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nomeCompleto").value("Nome Novo"))
                 .andExpect(jsonPath("$.email").value(novoEmail));
@@ -117,16 +152,68 @@ class UsuarioControllerTest {
         assertThat(passwordEncoder.matches("senhaNova", atualizado.getSenha())).isTrue();
 
         // Falha se a senha for gravada em texto puro
-        mockMvc.perform(post("/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"%s\",\"senha\":\"senhaNova\"}".formatted(novoEmail)))
-                .andExpect(status().isOk());
+        login(novoEmail, "senhaNova").andExpect(status().isOk());
+    }
+
+    @Test
+    void atualizarMeSoONomeNaoPedeSenha() throws Exception {
+        atualizarMe(usuario, atualizacao("Nome Novo", usuario.getEmail(), null, null))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nomeCompleto").value("Nome Novo"));
+
+        recarregarContexto();
+        Usuario atualizado = usuarioRepository.findById(usuario.getId()).orElseThrow();
+        assertThat(passwordEncoder.matches(DadosTeste.SENHA, atualizado.getSenha())).isTrue();
+    }
+
+    @Test
+    void trocarSenhaOuEmailSemASenhaAtualCertaRetorna400() throws Exception {
+        atualizarMe(usuario, atualizacao("Nome", usuario.getEmail(), null, "senhaNova1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagens.senhaAtual").value("Senha atual incorreta"));
+
+        atualizarMe(usuario, atualizacao("Nome", UUID.randomUUID() + "@teste.com", "senhaErrada", null))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagens.senhaAtual").value("Senha atual incorreta"));
+
+        recarregarContexto();
+        Usuario semMudanca = usuarioRepository.findById(usuario.getId()).orElseThrow();
+        assertThat(semMudanca.getEmail()).isEqualTo(usuario.getEmail());
+        assertThat(passwordEncoder.matches(DadosTeste.SENHA, semMudanca.getSenha())).isTrue();
+    }
+
+    @Test
+    void senhaAtualErradaCincoVezesBloqueiaAsTentativas() throws Exception {
+        for (int i = 0; i < 5; i++) {
+            atualizarMe(usuario, atualizacao("Nome", usuario.getEmail(), "senhaErrada", "senhaNova1"))
+                    .andExpect(status().isBadRequest());
+        }
+
+        atualizarMe(usuario, atualizacao("Nome", usuario.getEmail(), DadosTeste.SENHA, "senhaNova1"))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
+    void novaSenhaCurtaRetorna400() throws Exception {
+        atualizarMe(usuario, atualizacao("Nome", usuario.getEmail(), DadosTeste.SENHA, "curta"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagens.novaSenha").exists());
+    }
+
+    @Test
+    void contaGoogleSemSenhaNaoCriaSenhaPorAqui() throws Exception {
+        usuario.setProvedor(ProvedorAutenticacao.GOOGLE);
+        usuario.setSenha(null);
+        usuarioRepository.saveAndFlush(usuario);
+
+        atualizarMe(usuario, atualizacao("Nome", usuario.getEmail(), null, "senhaNova1"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     void atualizarMeNaoAlteraPerfilNemProvedor() throws Exception {
         String body = """
-                {"nomeCompleto":"X","email":"%s","senha":"abc123","perfil":"ADMINISTRADOR","provedor":"GOOGLE"}
+                {"nomeCompleto":"X","email":"%s","perfil":"ADMINISTRADOR","provedor":"GOOGLE"}
                 """.formatted(usuario.getEmail());
 
         atualizarMe(usuario, body)
@@ -137,7 +224,7 @@ class UsuarioControllerTest {
 
     @Test
     void atualizarMeComEmailDeOutroUsuarioRetorna409() throws Exception {
-        atualizarMe(usuario, json("Nome", outroUsuario.getEmail(), "senha123"))
+        atualizarMe(usuario, atualizacao("Nome", outroUsuario.getEmail(), DadosTeste.SENHA, null))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.mensagem").value("E-mail já cadastrado"));
     }
@@ -147,10 +234,10 @@ class UsuarioControllerTest {
         usuario.setProvedor(ProvedorAutenticacao.GOOGLE);
         usuarioRepository.saveAndFlush(usuario);
 
-        atualizarMe(usuario, json("Nome", UUID.randomUUID() + "@teste.com", "senha123"))
+        atualizarMe(usuario, atualizacao("Nome", UUID.randomUUID() + "@teste.com", DadosTeste.SENHA, null))
                 .andExpect(status().isBadRequest());
 
-        atualizarMe(usuario, json("Nome Novo", usuario.getEmail(), "senha123"))
+        atualizarMe(usuario, atualizacao("Nome Novo", usuario.getEmail(), null, null))
                 .andExpect(status().isOk());
     }
 
@@ -259,6 +346,19 @@ class UsuarioControllerTest {
                 .header("Authorization", fabrica.bearer(autor))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body));
+    }
+
+    private ResultActions login(String email, String senha) throws Exception {
+        return mockMvc.perform(post("/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"%s\",\"senha\":\"%s\"}".formatted(email, senha)));
+    }
+
+    // null vira ausente no JSON, como o front manda quando o campo fica vazio
+    private String atualizacao(String nome, String email, String senhaAtual, String novaSenha) {
+        return "{\"nomeCompleto\":\"%s\",\"email\":\"%s\"%s%s}".formatted(nome, email,
+                senhaAtual == null ? "" : ",\"senhaAtual\":\"%s\"".formatted(senhaAtual),
+                novaSenha == null ? "" : ",\"novaSenha\":\"%s\"".formatted(novaSenha));
     }
 
     private String json(String nome, String email, String senha) {
