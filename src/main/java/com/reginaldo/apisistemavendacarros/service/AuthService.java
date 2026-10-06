@@ -1,10 +1,8 @@
 package com.reginaldo.apisistemavendacarros.service;
 
 import com.reginaldo.apisistemavendacarros.dto.login.LoginRequest;
-import com.reginaldo.apisistemavendacarros.dto.login.LoginResponse;
 import com.reginaldo.apisistemavendacarros.entity.Usuario;
 import com.reginaldo.apisistemavendacarros.exception.MuitasTentativasException;
-import com.reginaldo.apisistemavendacarros.security.JwtService;
 import com.reginaldo.apisistemavendacarros.security.LimiteTentativas;
 import com.reginaldo.apisistemavendacarros.security.UsuarioDetails;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +18,11 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final LimiteTentativas limiteTentativas;
 
-    public LoginResponse login (LoginRequest request) {
+    // Confere e-mail e senha; o token e o cookie ficam com o AuthController
+    public Usuario login (LoginRequest request) {
 
         // Por e-mail, e não por IP: no Render todas as requisições chegam pelo mesmo proxy
         String chave = "login:" + (request.email() == null ? "" : request.email().trim().toLowerCase(Locale.ROOT));
@@ -47,11 +45,7 @@ public class AuthService {
         UsuarioDetails usuarioDetails =
                 (UsuarioDetails) authentication.getPrincipal();
 
-        Usuario usuario =usuarioDetails.getUsuario();
-
-
-        String jwt = jwtService.gerarToken(usuario);
-        return new LoginResponse(jwt);
+        return usuarioDetails.getUsuario();
     }
 
 }

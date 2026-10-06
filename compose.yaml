@@ -41,7 +41,7 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
       MAIL_USERNAME: ${MAIL_USERNAME:-}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-      # Endereço do front (CORS e volta do login Google)
+      # Endereço do front (volta do login Google)
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
 
 volumes:

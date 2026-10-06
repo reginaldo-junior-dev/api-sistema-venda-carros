@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -76,7 +77,7 @@ class ClienteControllerTest {
 
     @Test
     void cadastroSemAutenticacaoRetorna401() throws Exception {
-        mockMvc.perform(post("/cliente")
+        mockMvc.perform(post("/cliente").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json("12345678901", "1990-05-10", "11987654321")))
                 .andExpect(status().isUnauthorized());

@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -173,7 +174,7 @@ class InteresseCarroControllerTest {
 
     @Test
     void cadastroSemAutenticacaoRetorna401() throws Exception {
-        mockMvc.perform(post("/carro/" + carro.getId() + "/interesse")
+        mockMvc.perform(post("/carro/" + carro.getId() + "/interesse").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json("João", "joao@email.com", "21999999999", "Oi")))
                 .andExpect(status().isUnauthorized());

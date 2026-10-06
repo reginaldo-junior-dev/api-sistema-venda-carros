@@ -26,14 +26,14 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// Fim do login Google: a pessoa volta ao front, com o token no sucesso e sem ele na falha
+// Fim do login Google: a pessoa volta ao front; no sucesso, com a sessão gravada no cookie (o token nunca vai na URL)
 class OAuth2LoginHandlersTest {
 
     private static final String FRONT = "https://patio.vercel.app";
 
     private final UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
     private final JwtService jwtService = mock(JwtService.class);
-    private final OAuth2LoginSucessoHandler sucesso = new OAuth2LoginSucessoHandler(usuarioRepository, jwtService);
+    private final OAuth2LoginSucessoHandler sucesso = new OAuth2LoginSucessoHandler(usuarioRepository, jwtService, new CookieSessao(true));
     private final OAuth2LoginFalhaHandler falha = new OAuth2LoginFalhaHandler();
 
     @BeforeEach
@@ -56,7 +56,10 @@ class OAuth2LoginHandlersTest {
 
         sucesso.onAuthenticationSuccess(new MockHttpServletRequest(), resposta, loginGoogle("Ana Souza", "ana@exemplo.com"));
 
-        assertThat(resposta.getRedirectedUrl()).isEqualTo(FRONT + "/oauth/callback#token=token.jwt.ana");
+        assertThat(resposta.getRedirectedUrl()).isEqualTo(FRONT + "/oauth/callback");
+        assertThat(resposta.getHeader("Set-Cookie"))
+                .startsWith("sessao=token.jwt.ana;")
+                .contains("HttpOnly", "Secure", "SameSite=Lax", "Path=/");
         verify(usuarioRepository, never()).save(any());
     }
 
@@ -75,7 +78,8 @@ class OAuth2LoginHandlersTest {
                         && novo.getPerfil() == PerfilUsuario.USUARIO
                         && novo.getProvedor() == ProvedorAutenticacao.GOOGLE
                         && novo.getSenha() == null));
-        assertThat(resposta.getRedirectedUrl()).isEqualTo(FRONT + "/oauth/callback#token=token.jwt.bruno");
+        assertThat(resposta.getRedirectedUrl()).isEqualTo(FRONT + "/oauth/callback");
+        assertThat(resposta.getHeader("Set-Cookie")).startsWith("sessao=token.jwt.bruno;");
     }
 
     @Test
@@ -85,5 +89,6 @@ class OAuth2LoginHandlersTest {
         falha.onAuthenticationFailure(new MockHttpServletRequest(), resposta, new OAuth2AuthenticationException("access_denied"));
 
         assertThat(resposta.getRedirectedUrl()).isEqualTo(FRONT + "/oauth/callback");
+        assertThat(resposta.getHeader("Set-Cookie")).isNull();
     }
 }

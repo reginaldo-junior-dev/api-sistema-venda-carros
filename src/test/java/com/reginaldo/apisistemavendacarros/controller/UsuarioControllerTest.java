@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -72,7 +73,7 @@ class UsuarioControllerTest {
     void cadastroPublicoCriptografaSenha() throws Exception {
         String email = UUID.randomUUID() + "@teste.com";
 
-        mockMvc.perform(post("/usuario")
+        mockMvc.perform(post("/usuario").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json("Maria", email, "minhaSenha")))
                 .andExpect(status().isCreated())
@@ -86,7 +87,7 @@ class UsuarioControllerTest {
 
     @Test
     void cadastroComEmailDuplicadoRetorna409() throws Exception {
-        mockMvc.perform(post("/usuario")
+        mockMvc.perform(post("/usuario").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json("Maria", usuario.getEmail(), "minhaSenha")))
                 .andExpect(status().isConflict())
@@ -95,7 +96,7 @@ class UsuarioControllerTest {
 
     @Test
     void cadastroComEmailInvalidoOuSenhaGrandeRetorna400() throws Exception {
-        mockMvc.perform(post("/usuario")
+        mockMvc.perform(post("/usuario").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json("Maria", "email-invalido", "a".repeat(73))))
                 .andExpect(status().isBadRequest())
@@ -105,7 +106,7 @@ class UsuarioControllerTest {
 
     @Test
     void cadastroComSenhaCurtaRetorna400() throws Exception {
-        mockMvc.perform(post("/usuario")
+        mockMvc.perform(post("/usuario").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json("Maria", UUID.randomUUID() + "@teste.com", "1234567")))
                 .andExpect(status().isBadRequest())
@@ -349,7 +350,7 @@ class UsuarioControllerTest {
     }
 
     private ResultActions login(String email, String senha) throws Exception {
-        return mockMvc.perform(post("/auth/login")
+        return mockMvc.perform(post("/auth/login").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"%s\",\"senha\":\"%s\"}".formatted(email, senha)));
     }

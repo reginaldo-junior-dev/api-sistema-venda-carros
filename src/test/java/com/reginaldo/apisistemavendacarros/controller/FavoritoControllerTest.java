@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -141,7 +142,7 @@ class FavoritoControllerTest {
 
     @Test
     void favoritarSemAutenticacaoRetorna401() throws Exception {
-        mockMvc.perform(post("/carro/" + carro.getId() + "/favorito"))
+        mockMvc.perform(post("/carro/" + carro.getId() + "/favorito").with(csrf()))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -189,7 +190,7 @@ class FavoritoControllerTest {
 
     @Test
     void removerSemAutenticacaoRetorna401() throws Exception {
-        mockMvc.perform(delete("/carro/" + carro.getId() + "/favorito"))
+        mockMvc.perform(delete("/carro/" + carro.getId() + "/favorito").with(csrf()))
                 .andExpect(status().isUnauthorized());
     }
 

@@ -8,6 +8,7 @@ import com.reginaldo.apisistemavendacarros.security.UsuarioDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
@@ -35,12 +36,18 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .cors(cors -> {})
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
                 )
-                .csrf(csrf -> csrf.disable())
+                // A sessão vai num cookie, que o navegador manda sozinho: sem isso, outro site poderia agir em nome da pessoa.
+                // spa(): token no cookie XSRF-TOKEN, devolvido pelo front no cabeçalho X-XSRF-TOKEN.
+                // Ficam de fora o webhook (sem cookie, validado pela assinatura da Stripe) e quem se autentica
+                // pelo cabeçalho Authorization, que outro site não consegue enviar
+                .csrf(csrf -> csrf.spa()
+                        .ignoringRequestMatchers("/stripe/webhook")
+                        .ignoringRequestMatchers(request -> request.getHeader(HttpHeaders.AUTHORIZATION) != null)
+                )
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2LoginSucessoHandler)
                         .failureHandler(oAuth2LoginFalhaHandler)
@@ -55,7 +62,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/carro/imagens/*/url").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.POST, "/usuario").permitAll()
                         .requestMatchers("/usuario/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/usuario", "/usuario/*").hasRole("ADMINISTRADOR")

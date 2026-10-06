@@ -9,12 +9,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 @Service
 @RequiredArgsConstructor
 public class JwtService {
+
+    // Vale para o token e para o cookie que o guarda
+    public static final Duration VALIDADE = Duration.ofHours(1);
 
     @Value("${JWT_SECRET}")
     private String jwtSecret;
@@ -38,7 +41,7 @@ public class JwtService {
     }
 
     public Instant dataExpiracao () {
-        return Instant.now().plus(1, ChronoUnit.HOURS);
+        return Instant.now().plus(VALIDADE);
     }
 
     public String extrairUsuarioId(String token) {

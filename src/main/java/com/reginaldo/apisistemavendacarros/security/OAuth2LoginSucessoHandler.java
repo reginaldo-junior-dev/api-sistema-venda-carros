@@ -9,11 +9,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 
 @Component
@@ -22,9 +22,10 @@ public class OAuth2LoginSucessoHandler implements AuthenticationSuccessHandler {
 
     private final UsuarioRepository usuarioRepository;
     private final JwtService jwtService;
+    private final CookieSessao cookieSessao;
 
-    // Endereço do front: o login termina na página /oauth/callback, que guarda o token e limpa a URL.
-    // O token vai depois do # porque essa parte da URL não é enviada a nenhum servidor (logs, Referer)
+    // Endereço do front: o login termina na página /oauth/callback, que busca a conta e leva a pessoa adiante.
+    // O token vai no cookie da sessão, nunca na URL
     @Value("${app.frontend-url}")
     private String frontendUrl;
 
@@ -52,12 +53,7 @@ public class OAuth2LoginSucessoHandler implements AuthenticationSuccessHandler {
         }
            String token = jwtService.gerarToken(usuarioFinal);
 
-           String destino = UriComponentsBuilder.fromUriString(frontendUrl)
-                   .path("/oauth/callback")
-                   .fragment("token=" + token)
-                   .build()
-                   .toUriString();
-
-           response.sendRedirect(destino);
+           response.addHeader(HttpHeaders.SET_COOKIE, cookieSessao.criar(token, JwtService.VALIDADE).toString());
+           response.sendRedirect(frontendUrl + "/oauth/callback");
     }
 }

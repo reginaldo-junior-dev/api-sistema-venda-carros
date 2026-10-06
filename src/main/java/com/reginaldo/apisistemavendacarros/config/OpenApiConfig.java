@@ -1,5 +1,6 @@
 package com.reginaldo.apisistemavendacarros.config;
 
+import com.reginaldo.apisistemavendacarros.security.CookieSessao;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -14,7 +15,7 @@ import java.util.List;
 @Configuration
 public class OpenApiConfig {
 
-    private static final String JWT = "bearerAuth";
+    private static final String SESSAO = "cookieSessao";
 
     @Bean
     public OpenAPI openAPI() {
@@ -25,20 +26,22 @@ public class OpenApiConfig {
                         .description("""
                                 Catálogo de carros, compra com reserva do veículo e pagamento com cartão via Stripe.
 
-                                **Como testar:** crie uma conta em `POST /usuario`, faça login em `POST /auth/login`, \
-                                copie o `token` e cole no botão **Authorize**.
+                                **Como testar:** crie uma conta em `POST /usuario` e faça login em `POST /auth/login`. \
+                                A sessão fica num cookie HttpOnly que o navegador guarda sozinho: as próximas chamadas \
+                                daqui já vão autenticadas. `POST /auth/logout` encerra a sessão.
 
                                 Rotas marcadas com **[Admin]** exigem um usuário administrador. \
                                 Rotas sem cadeado são públicas."""))
-                .components(new Components().addSecuritySchemes(JWT, new SecurityScheme()
-                        .type(SecurityScheme.Type.HTTP)
-                        .scheme("bearer")
-                        .bearerFormat("JWT")))
-                // JWT em todas as rotas; as públicas removem com @SecurityRequirements vazio
-                .addSecurityItem(new SecurityRequirement().addList(JWT))
+                .components(new Components().addSecuritySchemes(SESSAO, new SecurityScheme()
+                        .type(SecurityScheme.Type.APIKEY)
+                        .in(SecurityScheme.In.COOKIE)
+                        .name(CookieSessao.NOME)
+                        .description("JWT no cookie HttpOnly gravado pelo login")))
+                // Sessão em todas as rotas; as públicas removem com @SecurityRequirements vazio
+                .addSecurityItem(new SecurityRequirement().addList(SESSAO))
                 // Descrições ficam só aqui: @Tag com descrição no controller duplica o grupo
                 .tags(List.of(
-                        tag("Autenticação", "Login com e-mail e senha (gera o token JWT)"),
+                        tag("Autenticação", "Login e logout (sessão em cookie HttpOnly)"),
                         tag("Usuários", "Conta de acesso (login)"),
                         tag("Clientes", "Dados pessoais do comprador (CPF, telefone...)"),
                         tag("Endereços", "Endereços do cliente logado"),

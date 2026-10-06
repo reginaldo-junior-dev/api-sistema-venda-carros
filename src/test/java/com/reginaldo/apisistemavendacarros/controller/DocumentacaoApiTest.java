@@ -32,10 +32,11 @@ class DocumentacaoApiTest {
     }
 
     @Test
-    void jwtNoBotaoAuthorizeERotasPublicasSemCadeado() throws Exception {
+    void sessaoPorCookieERotasPublicasSemCadeado() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
-                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.scheme").value("bearer"))
-                .andExpect(jsonPath("$.security[0].bearerAuth").exists())
+                .andExpect(jsonPath("$.components.securitySchemes.cookieSessao.in").value("cookie"))
+                .andExpect(jsonPath("$.components.securitySchemes.cookieSessao.name").value("sessao"))
+                .andExpect(jsonPath("$.security[0].cookieSessao").exists())
                 .andExpect(jsonPath("$.paths['/auth/login'].post.security", hasSize(0)))
                 .andExpect(jsonPath("$.paths['/carro'].get.security", hasSize(0)))
                 .andExpect(jsonPath("$.paths['/compra'].post.security").doesNotExist());

@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -111,7 +112,7 @@ class EnderecoControllerTest {
 
     @Test
     void cadastroSemAutenticacaoRetorna401() throws Exception {
-        mockMvc.perform(post("/endereco")
+        mockMvc.perform(post("/endereco").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json("01310100", "SP", true)))
                 .andExpect(status().isUnauthorized());
