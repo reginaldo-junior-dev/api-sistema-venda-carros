@@ -125,16 +125,21 @@ class AuthControllerTest {
     void diagnosticoCsrf() throws Exception {
         org.springframework.test.web.servlet.MvcResult r = mockMvc.perform(get("/carro")).andReturn();
         jakarta.servlet.http.HttpServletRequest req = r.getRequest();
-        Object token = req.getAttribute(org.springframework.security.web.csrf.CsrfToken.class.getName());
-        String valor = token == null ? "SEM ATRIBUTO" : ((org.springframework.security.web.csrf.CsrfToken) token).getToken();
-        java.util.List<String> atributos = java.util.Collections.list(req.getAttributeNames());
-        throw new AssertionError("DIAG token=" + (valor == null ? "null" : valor.length() + "chars")
-                + " | tipo=" + (token == null ? "-" : token.getClass().getSimpleName())
-                + " | atributos=" + atributos
+        org.springframework.security.web.csrf.DeferredCsrfToken adiado = (org.springframework.security.web.csrf.DeferredCsrfToken)
+                req.getAttribute(org.springframework.security.web.csrf.DeferredCsrfToken.class.getName());
+        String repositorio = "?";
+        for (java.lang.reflect.Field campo : adiado.getClass().getDeclaredFields()) {
+            if (org.springframework.security.web.csrf.CsrfTokenRepository.class.isAssignableFrom(campo.getType())) {
+                campo.setAccessible(true);
+                repositorio = campo.get(adiado).getClass().getName();
+            }
+        }
+        throw new AssertionError("DIAG setcookie=" + r.getResponse().getHeaders("Set-Cookie")
+                + " | gerado=" + adiado.isGenerated()
+                + " | repositorio=" + repositorio
                 + " | headers=" + r.getResponse().getHeaderNames()
-                + " | setcookie=" + r.getResponse().getHeaders("Set-Cookie")
-                + " | cookies=" + java.util.Arrays.toString(r.getResponse().getCookies())
-                + " | java=" + System.getProperty("java.version"));
+                + " | cookiesRequisicao=" + java.util.Arrays.toString(req.getCookies())
+                + " | sessao=" + (req.getSession(false) != null));
     }
 
     @Test
