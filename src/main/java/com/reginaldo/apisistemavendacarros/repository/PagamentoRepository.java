@@ -29,6 +29,10 @@ public interface PagamentoRepository extends JpaRepository<Pagamento, UUID> {
     @Query("SELECT p.compra.id FROM Pagamento p WHERE p.id = :id")
     Optional<UUID> findCompraIdByPagamentoId(@Param("id") UUID id);
 
+    // Pagamentos com cartão (idExterno da Stripe) em um status: usados pela reconciliação com a Stripe
+    @Query("SELECT p.idExterno FROM Pagamento p WHERE p.status = :status AND p.idExterno IS NOT NULL")
+    List<String> findIdsExternosPorStatus(@Param("status") StatusPagamento status);
+
     @Query("SELECT p.compra.id FROM Pagamento p WHERE p.idExterno = :idExterno")
     Optional<UUID> findCompraIdByIdExterno(@Param("idExterno") String idExterno);
 
