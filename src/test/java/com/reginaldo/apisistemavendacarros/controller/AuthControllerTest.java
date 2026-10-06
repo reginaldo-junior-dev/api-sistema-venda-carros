@@ -122,6 +122,22 @@ class AuthControllerTest {
     }
 
     @Test
+    void diagnosticoCsrf() throws Exception {
+        org.springframework.test.web.servlet.MvcResult r = mockMvc.perform(get("/carro")).andReturn();
+        jakarta.servlet.http.HttpServletRequest req = r.getRequest();
+        Object token = req.getAttribute(org.springframework.security.web.csrf.CsrfToken.class.getName());
+        String valor = token == null ? "SEM ATRIBUTO" : ((org.springframework.security.web.csrf.CsrfToken) token).getToken();
+        java.util.List<String> atributos = java.util.Collections.list(req.getAttributeNames());
+        throw new AssertionError("DIAG token=" + (valor == null ? "null" : valor.length() + "chars")
+                + " | tipo=" + (token == null ? "-" : token.getClass().getSimpleName())
+                + " | atributos=" + atributos
+                + " | headers=" + r.getResponse().getHeaderNames()
+                + " | setcookie=" + r.getResponse().getHeaders("Set-Cookie")
+                + " | cookies=" + java.util.Arrays.toString(r.getResponse().getCookies())
+                + " | java=" + System.getProperty("java.version"));
+    }
+
+    @Test
     void primeiraVisitaJaRecebeOCookieCsrf() throws Exception {
         // Sem isso, o primeiro POST do site (login, cadastro) seria recusado por falta do token
         MockHttpServletResponse resposta = mockMvc.perform(get("/carro")).andReturn().getResponse();
