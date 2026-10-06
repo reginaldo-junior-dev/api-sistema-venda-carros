@@ -1,6 +1,5 @@
 package com.reginaldo.apisistemavendacarros.config;
 
-import com.reginaldo.apisistemavendacarros.security.CsrfCookieFilter;
 import com.reginaldo.apisistemavendacarros.security.JwtAuthenticationFilter;
 import com.reginaldo.apisistemavendacarros.security.OAuth2LoginFalhaHandler;
 import com.reginaldo.apisistemavendacarros.security.OAuth2LoginSucessoHandler;
@@ -20,7 +19,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CsrfFilter;
 
 @Configuration
 @RequiredArgsConstructor
@@ -50,7 +48,6 @@ public class SecurityConfig {
                         .ignoringRequestMatchers("/stripe/webhook")
                         .ignoringRequestMatchers(request -> request.getHeader(HttpHeaders.AUTHORIZATION) != null)
                 )
-                .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2LoginSucessoHandler)
                         .failureHandler(oAuth2LoginFalhaHandler)
