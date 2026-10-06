@@ -1,0 +1,48 @@
+# Sobe PostgreSQL + API com: docker compose up --build
+# A API fica em http://localhost:8080 (Swagger em /swagger-ui.html) e o banco é criado pelas migrações do Flyway.
+# Os valores abaixo com ${...} vêm do arquivo .env desta pasta (veja o README).
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: venda_carros
+      POSTGRES_USER: venda_carros
+      POSTGRES_PASSWORD: venda_carros
+    # Os dados continuam salvos entre um "up" e outro; "docker compose down -v" apaga tudo
+    volumes:
+      - dados-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U venda_carros"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Banco do container "db" acima (ignora o endereço do .env, que aponta para o banco local)
+      VENDA_CARROS_DB_URL: jdbc:postgresql://db:5432/venda_carros
+      VENDA_CARROS_DB_USERNAME: venda_carros
+      VENDA_CARROS_DB_PASSWORD: venda_carros
+      # Obrigatório: assina os tokens de login
+      JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET no arquivo .env (um texto longo e aleatório)}
+      # Opcionais: sem eles a API sobe, mas login Google, cartão, fotos e e-mails não funcionam
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-nao-configurado}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-nao-configurado}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-nao-configurado}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-nao-configurado}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      # Endereço do front (CORS e volta do login Google)
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+
+volumes:
+  dados-postgres:

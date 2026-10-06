@@ -1,0 +1,12 @@
+# O build da imagem só precisa do pom.xml e de src/
+target
+.git
+.github
+.idea
+.vscode
+*.iml
+.mvn
+mvnw
+mvnw.cmd
+# Segredos nunca entram na imagem: chegam por variáveis de ambiente
+.env
