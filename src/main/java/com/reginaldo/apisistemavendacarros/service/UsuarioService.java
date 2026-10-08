@@ -94,10 +94,16 @@ public class UsuarioService {
         return mapper.toResponse(usuario);
     }
 
-    // Remove junto o cliente do usuário (bloqueia se houver compras)
+    // Remove junto o cliente do usuário (bloqueia se houver compras).
+    // Administradores não são criados nem promovidos pela API, então também não são excluídos por ela:
+    // assim o sistema nunca fica sem administrador
     @Transactional
     public void excluir (UUID id) {
         Usuario usuario = buscarUsuario(id);
+
+        if (usuario.getPerfil() == PerfilUsuario.ADMINISTRADOR) {
+            throw new ValorInvalidoException("Conta de administrador não pode ser excluída");
+        }
 
         clienteService.excluirSeExistir(id);
         usuarioRepository.delete(usuario);

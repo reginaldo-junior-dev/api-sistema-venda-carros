@@ -335,6 +335,21 @@ class UsuarioControllerTest {
     }
 
     @Test
+    void contaDeAdministradorNaoPodeSerExcluida() throws Exception {
+        Usuario outroAdministrador = fabrica.usuario(PerfilUsuario.ADMINISTRADOR);
+
+        mockMvc.perform(delete("/usuario/" + outroAdministrador.getId()).header("Authorization", fabrica.bearer(administrador)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagem").value("Conta de administrador não pode ser excluída"));
+
+        mockMvc.perform(delete("/usuario/me").header("Authorization", fabrica.bearer(administrador)))
+                .andExpect(status().isBadRequest());
+
+        assertThat(usuarioRepository.existsById(outroAdministrador.getId())).isTrue();
+        assertThat(usuarioRepository.existsById(administrador.getId())).isTrue();
+    }
+
+    @Test
     void semAutenticacaoRetorna401ComCorpo() throws Exception {
         mockMvc.perform(get("/usuario/me"))
                 .andExpect(status().isUnauthorized())
