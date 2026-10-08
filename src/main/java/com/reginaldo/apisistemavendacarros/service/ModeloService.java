@@ -4,8 +4,10 @@ import com.reginaldo.apisistemavendacarros.dto.modelo.ModeloRequest;
 import com.reginaldo.apisistemavendacarros.dto.modelo.ModeloResponse;
 import com.reginaldo.apisistemavendacarros.entity.Marca;
 import com.reginaldo.apisistemavendacarros.entity.Modelo;
+import com.reginaldo.apisistemavendacarros.exception.ConflitoException;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.ModeloMapper;
+import com.reginaldo.apisistemavendacarros.repository.CarroRepository;
 import com.reginaldo.apisistemavendacarros.repository.MarcaRepository;
 import com.reginaldo.apisistemavendacarros.repository.ModeloRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import java.util.UUID;
 public class ModeloService {
 
     private final ModeloRepository modeloRepository;
+    private final CarroRepository carroRepository;
     private final MarcaRepository marcaRepository;
     private final ModeloMapper mapper;
 
@@ -65,6 +68,11 @@ public class ModeloService {
     public void excluir (UUID id) {
         modeloRepository.findById(id).orElseThrow(() ->
                 new RecursoNaoEncontradoException("Modelo não encontrado"));
+
+        // Mensagem clara em vez do erro genérico de chave estrangeira
+        if (carroRepository.existsByModeloId(id)) {
+            throw new ConflitoException("Modelo possui carros cadastrados e não pode ser excluído");
+        }
 
         modeloRepository.deleteById(id);
     }

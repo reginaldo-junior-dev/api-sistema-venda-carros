@@ -3,9 +3,11 @@ package com.reginaldo.apisistemavendacarros.service;
 import com.reginaldo.apisistemavendacarros.dto.marca.MarcaRequest;
 import com.reginaldo.apisistemavendacarros.dto.marca.MarcaResponse;
 import com.reginaldo.apisistemavendacarros.entity.Marca;
+import com.reginaldo.apisistemavendacarros.exception.ConflitoException;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.MarcaMapper;
 import com.reginaldo.apisistemavendacarros.repository.MarcaRepository;
+import com.reginaldo.apisistemavendacarros.repository.ModeloRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,7 @@ import java.util.UUID;
 public class MarcaService {
 
     private final MarcaRepository marcaRepository;
+    private final ModeloRepository modeloRepository;
     private final MarcaMapper mapper;
 
     public MarcaResponse cadastro (MarcaRequest request) {
@@ -56,6 +59,11 @@ public class MarcaService {
     public void excluir (UUID id) {
         marcaRepository.findById(id).orElseThrow(() ->
                 new RecursoNaoEncontradoException("Marca não encontrada"));
+
+        // Mensagem clara em vez do erro genérico de chave estrangeira
+        if (modeloRepository.existsByMarcaId(id)) {
+            throw new ConflitoException("Marca possui modelos cadastrados e não pode ser excluída");
+        }
 
         marcaRepository.deleteById(id);
 

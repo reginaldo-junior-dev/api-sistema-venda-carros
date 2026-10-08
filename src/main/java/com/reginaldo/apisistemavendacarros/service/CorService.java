@@ -3,9 +3,11 @@ package com.reginaldo.apisistemavendacarros.service;
 import com.reginaldo.apisistemavendacarros.dto.cor.CorRequest;
 import com.reginaldo.apisistemavendacarros.dto.cor.CorResponse;
 import com.reginaldo.apisistemavendacarros.entity.Cor;
+import com.reginaldo.apisistemavendacarros.exception.ConflitoException;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.CorMapper;
 import com.reginaldo.apisistemavendacarros.repository.CorRepository;
+import com.reginaldo.apisistemavendacarros.repository.CarroRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,7 @@ import java.util.UUID;
 public class CorService {
 
     private final CorRepository corRepository;
+    private final CarroRepository carroRepository;
     private final CorMapper mapper;
 
     public CorResponse cadastro (CorRequest request) {
@@ -53,6 +56,11 @@ public class CorService {
     public void excluir (UUID id) {
         corRepository.findById(id).orElseThrow(() ->
                 new RecursoNaoEncontradoException("Cor não encontrada"));
+
+        // Mensagem clara em vez do erro genérico de chave estrangeira
+        if (carroRepository.existsByCorId(id)) {
+            throw new ConflitoException("Cor possui carros cadastrados e não pode ser excluída");
+        }
 
         corRepository.deleteById(id);
     }

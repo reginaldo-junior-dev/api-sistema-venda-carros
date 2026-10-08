@@ -3,9 +3,11 @@ package com.reginaldo.apisistemavendacarros.service;
 import com.reginaldo.apisistemavendacarros.dto.categoria.CategoriaRequest;
 import com.reginaldo.apisistemavendacarros.dto.categoria.CategoriaResponse;
 import com.reginaldo.apisistemavendacarros.entity.Categoria;
+import com.reginaldo.apisistemavendacarros.exception.ConflitoException;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.mapper.CategoriaMapper;
 import com.reginaldo.apisistemavendacarros.repository.CategoriaRepository;
+import com.reginaldo.apisistemavendacarros.repository.CarroRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,7 @@ import java.util.UUID;
 public class CategoriaService {
 
     private final CategoriaRepository categoriaRepository;
+    private final CarroRepository carroRepository;
     private final CategoriaMapper mapper;
 
     public CategoriaResponse cadastro (CategoriaRequest request) {
@@ -53,6 +56,11 @@ public class CategoriaService {
     public void excluir (UUID id) {
         categoriaRepository.findById(id).orElseThrow(() ->
                 new RecursoNaoEncontradoException("Categoria não encontrada"));
+
+        // Mensagem clara em vez do erro genérico de chave estrangeira
+        if (carroRepository.existsByCategoriaId(id)) {
+            throw new ConflitoException("Categoria possui carros cadastrados e não pode ser excluída");
+        }
 
         categoriaRepository.deleteById(id);
     }

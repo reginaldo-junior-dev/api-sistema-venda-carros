@@ -18,4 +18,10 @@ public interface CarroRepository extends JpaRepository<Carro, UUID>,
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c FROM Carro c WHERE c.id = :id")
     Optional<Carro> findByIdComBloqueio(@Param("id") UUID id);
+
+    boolean existsByModeloId(UUID modeloId);
+
+    boolean existsByCorId(UUID corId);
+
+    boolean existsByCategoriaId(UUID categoriaId);
 }
