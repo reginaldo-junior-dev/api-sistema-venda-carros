@@ -3,6 +3,7 @@ package com.reginaldo.apisistemavendacarros.dto.carro;
 import com.reginaldo.apisistemavendacarros.enums.CondicaoCarro;
 import com.reginaldo.apisistemavendacarros.enums.TipoCambio;
 import com.reginaldo.apisistemavendacarros.enums.TipoCombustivel;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -23,11 +24,11 @@ public record CarroRequest(
         String descricao,
 
         @NotNull
-        @Positive
+        @Min(value = 1950, message = "Ano de fabricação inválido")
         Integer anoFabricacao,
 
         @NotNull
-        @Positive
+        @Min(value = 1950, message = "Ano do modelo inválido")
         Integer anoModelo,
 
         @NotNull

@@ -11,6 +11,7 @@ import com.reginaldo.apisistemavendacarros.entity.Categoria;
 import com.reginaldo.apisistemavendacarros.entity.Cor;
 import com.reginaldo.apisistemavendacarros.entity.Modelo;
 import com.reginaldo.apisistemavendacarros.enums.StatusCarro;
+import com.reginaldo.apisistemavendacarros.exception.CampoInvalidoException;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.exception.ValorInvalidoException;
 import com.reginaldo.apisistemavendacarros.mapper.CarroMapper;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.Year;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,6 +44,8 @@ public class CarroService {
         private final InteresseCarroRepository interesseCarroRepository;
 
         public CarroResponse cadastro (CarroRequest request) {
+            validarAnos(request);
+
             Modelo modelo = modeloRepository.findById(request.modeloId()).orElseThrow(() ->
                     new RecursoNaoEncontradoException("Modelo não encontrado"));
 
@@ -119,6 +123,8 @@ public class CarroService {
                 throw new ValorInvalidoException("Carro vendido não pode ser alterado");
             }
 
+            validarAnos(request);
+
             Modelo modelo = modeloRepository.findById(request.modeloId()).orElseThrow(() ->
                     new RecursoNaoEncontradoException("Modelo não encontrado"));
 
@@ -168,5 +174,17 @@ public class CarroService {
                 }
             });
     }
+
+        // O ano do modelo é o de fabricação ou o seguinte; fabricação no futuro não existe
+        private void validarAnos (CarroRequest request) {
+            if (request.anoFabricacao() > Year.now().getValue()) {
+                throw new CampoInvalidoException("anoFabricacao", "Ano de fabricação não pode estar no futuro");
+            }
+
+            int diferenca = request.anoModelo() - request.anoFabricacao();
+            if (diferenca < 0 || diferenca > 1) {
+                throw new CampoInvalidoException("anoModelo", "Ano do modelo deve ser igual ao ano de fabricação ou o seguinte");
+            }
+        }
 
 }
