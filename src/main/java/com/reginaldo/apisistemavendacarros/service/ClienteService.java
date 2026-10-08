@@ -1,5 +1,6 @@
 package com.reginaldo.apisistemavendacarros.service;
 
+import com.reginaldo.apisistemavendacarros.dto.cliente.ClienteAtualizacaoRequest;
 import com.reginaldo.apisistemavendacarros.dto.cliente.ClienteRequest;
 import com.reginaldo.apisistemavendacarros.dto.cliente.ClienteResponse;
 import com.reginaldo.apisistemavendacarros.entity.Cliente;
@@ -72,12 +73,8 @@ public class ClienteService {
     }
 
     @Transactional
-    public ClienteResponse atualizarPorUsuario (UUID usuarioId, ClienteRequest request) {
+    public ClienteResponse atualizarPorUsuario (UUID usuarioId, ClienteAtualizacaoRequest request) {
         Cliente cliente = buscarClienteDoUsuario(usuarioId);
-
-        if (clienteRepository.existsByCpfAndIdNot(request.cpf(), cliente.getId())) {
-            throw new ConflitoException("CPF já cadastrado");
-        }
 
         mapper.atualizar(request, cliente);
 

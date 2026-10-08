@@ -1,5 +1,6 @@
 package com.reginaldo.apisistemavendacarros.mapper;
 
+import com.reginaldo.apisistemavendacarros.dto.cliente.ClienteAtualizacaoRequest;
 import com.reginaldo.apisistemavendacarros.dto.cliente.ClienteRequest;
 import com.reginaldo.apisistemavendacarros.dto.cliente.ClienteResponse;
 import com.reginaldo.apisistemavendacarros.entity.Cliente;
@@ -14,8 +15,9 @@ public interface ClienteMapper {
     Cliente toEntity(ClienteRequest request);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "cpf", ignore = true)
     @Mapping(target = "usuario", ignore = true)
-    void atualizar(ClienteRequest request, @MappingTarget Cliente cliente);
+    void atualizar(ClienteAtualizacaoRequest request, @MappingTarget Cliente cliente);
 
     @Mapping(source = "usuario.id", target = "usuarioId")
     ClienteResponse toResponse(Cliente cliente);

@@ -181,16 +181,19 @@ class ClienteControllerTest {
     }
 
     @Test
-    void atualizacaoComCpfDeOutroClienteRetornaErro() throws Exception {
-        criarCliente(usuario, "12345678901");
-        criarCliente(outroUsuario, "98765432100");
+    void cpfEnviadoNaAtualizacaoEhIgnorado() throws Exception {
+        Cliente cliente = criarCliente(usuario, "12345678901");
 
         mockMvc.perform(put("/cliente/me")
                         .header("Authorization", bearer(usuario))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json("98765432100", "1990-05-10", "11987654321")))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.mensagem").value("CPF já cadastrado"));
+                        .content(json("52998224725", "1990-05-10", "1144445555")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cpf").value("12345678901"))
+                .andExpect(jsonPath("$.telefone").value("1144445555"));
+
+        assertThat(clienteRepository.findById(cliente.getId()).orElseThrow().getCpf())
+                .isEqualTo("12345678901");
     }
 
     @Test
