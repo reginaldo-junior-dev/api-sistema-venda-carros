@@ -3,7 +3,9 @@ package com.reginaldo.apisistemavendacarros.service;
 import com.reginaldo.apisistemavendacarros.dto.imagem.ImagemCarroResponse;
 import com.reginaldo.apisistemavendacarros.entity.Carro;
 import com.reginaldo.apisistemavendacarros.entity.ImagemCarro;
+import com.reginaldo.apisistemavendacarros.enums.StatusCarro;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
+import com.reginaldo.apisistemavendacarros.exception.ValorInvalidoException;
 import com.reginaldo.apisistemavendacarros.mapper.ImagemCarroMapper;
 import com.reginaldo.apisistemavendacarros.repository.CarroRepository;
 import com.reginaldo.apisistemavendacarros.repository.ImagemCarroRepository;
@@ -25,6 +27,9 @@ public class ImagemCarroService {
     public ImagemCarroResponse salvar(UUID carroId, MultipartFile arquivo) throws IOException {
         Carro carro = carroRepository.findById(carroId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Carro não encontrado"));
+
+        // Antes do upload: arquivo de carro vendido nem chega ao S3
+        garantirNaoVendido(carro);
 
         String chaveArquivo = s3Service.upload(arquivo);
 
@@ -65,6 +70,8 @@ public class ImagemCarroService {
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException("Imagem não encontrada"));
 
+        garantirNaoVendido(imagemCarro.getCarro());
+
         boolean eraPrincipal = imagemCarro.getPrincipal();
         UUID carroId = imagemCarro.getCarro().getId();
 
@@ -78,6 +85,13 @@ public class ImagemCarroService {
                         novaPrincipal.setPrincipal(true);
                         imagemCarroRepository.save(novaPrincipal);
                     });
+        }
+    }
+
+    // A compra aponta para o carro: as fotos fazem parte do histórico da venda
+    private void garantirNaoVendido(Carro carro) {
+        if (carro.getStatus() == StatusCarro.VENDIDO) {
+            throw new ValorInvalidoException("Fotos de carro vendido não podem ser alteradas");
         }
     }
 }
