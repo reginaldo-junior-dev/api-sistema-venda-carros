@@ -45,6 +45,11 @@ public class ParcelaService {
             throw new ValorInvalidoException("Somente pagamentos aprovados podem ser parcelados. Status atual: " + pagamento.getStatus());
         }
 
+        // A Stripe já cobrou o valor inteiro: parcelas aqui seriam uma dívida que não existe
+        if (pagamento.getIdExterno() != null) {
+            throw new ValorInvalidoException("Pagamento com cartão já foi cobrado integralmente e não pode ser parcelado");
+        }
+
         if (quantidade < 1 || quantidade > 12) {
             throw new ValorInvalidoException("Quantidade de parcelas deve estar entre 1 e 12");
         }

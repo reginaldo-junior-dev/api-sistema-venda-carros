@@ -198,6 +198,18 @@ class ParcelaControllerTest {
     }
 
     @Test
+    void pagamentoCobradoPelaStripeNaoPodeSerParcelado() throws Exception {
+        pagamento.setIdExterno("pi_teste_" + UUID.randomUUID());
+        pagamentoRepository.saveAndFlush(pagamento);
+
+        criar(administrador, pagamento.getId(), 3)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagem").value("Pagamento com cartão já foi cobrado integralmente e não pode ser parcelado"));
+
+        assertThat(parcelaRepository.existsByPagamentoId(pagamento.getId())).isFalse();
+    }
+
+    @Test
     void naoPermiteCriarParcelasDuasVezes() throws Exception {
         criar(administrador, pagamento.getId(), 3).andExpect(status().isCreated());
 
