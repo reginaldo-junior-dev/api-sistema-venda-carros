@@ -114,6 +114,11 @@ public class CarroService {
             Carro carro = carroRepository.findById(id).orElseThrow(() ->
                     new RecursoNaoEncontradoException("Carro não encontrado"));
 
+            // A compra aponta para o carro: alterar um vendido mudaria o histórico da venda
+            if (carro.getStatus() == StatusCarro.VENDIDO) {
+                throw new ValorInvalidoException("Carro vendido não pode ser alterado");
+            }
+
             Modelo modelo = modeloRepository.findById(request.modeloId()).orElseThrow(() ->
                     new RecursoNaoEncontradoException("Modelo não encontrado"));
 
