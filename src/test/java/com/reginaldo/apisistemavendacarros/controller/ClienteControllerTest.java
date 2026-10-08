@@ -181,19 +181,21 @@ class ClienteControllerTest {
     }
 
     @Test
-    void cpfEnviadoNaAtualizacaoEhIgnorado() throws Exception {
+    void cpfEDataNascimentoEnviadosNaAtualizacaoSaoIgnorados() throws Exception {
         Cliente cliente = criarCliente(usuario, "12345678901");
 
         mockMvc.perform(put("/cliente/me")
                         .header("Authorization", bearer(usuario))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json("52998224725", "1990-05-10", "1144445555")))
+                        .content(json("52998224725", "1985-02-20", "1144445555")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cpf").value("12345678901"))
+                .andExpect(jsonPath("$.dataNascimento").value("1990-05-10"))
                 .andExpect(jsonPath("$.telefone").value("1144445555"));
 
-        assertThat(clienteRepository.findById(cliente.getId()).orElseThrow().getCpf())
-                .isEqualTo("12345678901");
+        Cliente salvo = clienteRepository.findById(cliente.getId()).orElseThrow();
+        assertThat(salvo.getCpf()).isEqualTo("12345678901");
+        assertThat(salvo.getDataNascimento()).isEqualTo(LocalDate.of(1990, 5, 10));
     }
 
     @Test

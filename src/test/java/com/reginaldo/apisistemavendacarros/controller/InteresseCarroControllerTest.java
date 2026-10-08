@@ -135,7 +135,7 @@ class InteresseCarroControllerTest {
                         .header("Authorization", bearer(usuario))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"cpf":"12345678901","dataNascimento":"1990-05-10","telefone":"11888887777"}
+                                {"telefone":"11888887777"}
                                 """))
                 .andExpect(status().isOk());
 

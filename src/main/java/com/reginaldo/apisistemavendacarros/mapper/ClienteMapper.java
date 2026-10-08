@@ -16,6 +16,7 @@ public interface ClienteMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "cpf", ignore = true)
+    @Mapping(target = "dataNascimento", ignore = true)
     @Mapping(target = "usuario", ignore = true)
     void atualizar(ClienteAtualizacaoRequest request, @MappingTarget Cliente cliente);
 
