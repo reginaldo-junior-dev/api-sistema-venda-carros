@@ -113,6 +113,25 @@ class AuthControllerTest {
     }
 
     @Test
+    void logoutDerrubaCopiasDoToken() throws Exception {
+        Cookie sessao = login().getCookie("sessao");
+
+        mockMvc.perform(post("/auth/logout").cookie(sessao).with(tokenCsrf(mockMvc)))
+                .andExpect(status().isNoContent());
+
+        // Quem tivesse copiado o token não continua logado depois que a pessoa sai
+        mockMvc.perform(get("/usuario/me").cookie(sessao))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/usuario/me").header("Authorization", "Bearer " + sessao.getValue()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.mensagem").value("Token inválido ou expirado"));
+
+        // Um login novo volta a valer
+        mockMvc.perform(get("/usuario/me").cookie(login().getCookie("sessao")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void cookieInvalidoNaoBloqueiaPaginaPublicaESeApaga() throws Exception {
         MockHttpServletResponse resposta = mockMvc.perform(get("/carro").cookie(new Cookie("sessao", "token.invalido")))
                 .andExpect(status().isOk())

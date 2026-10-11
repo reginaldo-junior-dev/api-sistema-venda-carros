@@ -62,8 +62,9 @@ public class UsuarioService {
         return mapper.toResponse(buscarUsuario(id));
     }
 
+    // Devolve a entidade: com a senha trocada, o controller emite um token com a nova versão da sessão
     @Transactional
-    public UsuarioResponse atualizar (UUID id, UsuarioAtualizacaoRequest request) {
+    public Usuario atualizar (UUID id, UsuarioAtualizacaoRequest request) {
         Usuario usuario = buscarUsuario(id);
 
         if (usuarioRepository.existsByEmailAndIdNot(request.email(), id)) {
@@ -76,7 +77,7 @@ public class UsuarioService {
         }
 
         boolean trocaEmail = !usuario.getEmail().equals(request.email());
-        boolean trocaSenha = request.novaSenha() != null && !request.novaSenha().isBlank();
+        boolean trocaSenha = request.trocaSenha();
 
         // E-mail e senha dão acesso à conta: só mudam com a senha atual
         if (trocaEmail || trocaSenha) {
@@ -87,11 +88,11 @@ public class UsuarioService {
         usuario.setEmail(request.email());
         if (trocaSenha) {
             usuario.setSenha(passwordEncoder.encode(request.novaSenha()));
+            // Quem conhecia a senha antiga e já estava logado perde o acesso
+            usuario.encerrarSessoes();
         }
 
-        usuarioRepository.save(usuario);
-
-        return mapper.toResponse(usuario);
+        return usuarioRepository.save(usuario);
     }
 
     // Remove junto o cliente do usuário (bloqueia se houver compras).

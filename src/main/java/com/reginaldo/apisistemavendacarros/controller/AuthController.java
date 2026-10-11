@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,11 +42,16 @@ public class AuthController {
                 .body(usuarioMapper.toResponse(usuario));
     }
 
-    // O JavaScript não consegue apagar um cookie HttpOnly: quem encerra a sessão no navegador é a API
+    // O JavaScript não consegue apagar um cookie HttpOnly: quem encerra a sessão no navegador é a API.
+    // Apagar o cookie não basta: uma cópia do token continuaria valendo até vencer. Por isso as sessões são encerradas
+    // (em todos os aparelhos). Sem sessão válida, só o cookie é apagado
     @PostMapping("/logout")
-    @Operation(summary = "Sair: apaga o cookie da sessão")
+    @Operation(summary = "Sair: encerra as sessões da conta e apaga o cookie")
     @SecurityRequirements
-    public ResponseEntity<Void> logout () {
+    public ResponseEntity<Void> logout (@AuthenticationPrincipal Usuario usuario) {
+        if (usuario != null) {
+            authService.encerrarSessoes(usuario.getId());
+        }
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, cookieSessao.apagar().toString())
                 .build();

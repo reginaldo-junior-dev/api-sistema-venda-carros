@@ -2,6 +2,7 @@ package com.reginaldo.apisistemavendacarros.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.reginaldo.apisistemavendacarros.entity.Usuario;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,8 @@ public class JwtService {
     // Vale para o token e para o cookie que o guarda
     public static final Duration VALIDADE = Duration.ofHours(1);
 
+    public static final String CLAIM_VERSAO_SESSAO = "sessao";
+
     @Value("${JWT_SECRET}")
     private String jwtSecret;
 
@@ -35,6 +38,7 @@ public class JwtService {
         return JWT.create()
                 .withSubject(usuario.getId().toString())
                 .withClaim("perfil", usuario.getPerfil().name())
+                .withClaim(CLAIM_VERSAO_SESSAO, usuario.getVersaoSessao())
                 .withIssuedAt(Instant.now())
                 .withExpiresAt(dataExpiracao())
                 .sign(algorithm);
@@ -44,11 +48,11 @@ public class JwtService {
         return Instant.now().plus(VALIDADE);
     }
 
-    public String extrairUsuarioId(String token) {
+    // Confere assinatura e validade; a versão da sessão é conferida pelo JwtAuthenticationFilter, contra o banco
+    public DecodedJWT verificar(String token) {
         Algorithm algorithm = Algorithm.HMAC256(jwtSecret);
         return JWT.require(algorithm)
                 .build()
-                .verify(token)
-                .getSubject();
+                .verify(token);
     }
 }

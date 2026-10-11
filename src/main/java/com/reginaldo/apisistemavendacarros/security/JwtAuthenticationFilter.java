@@ -1,6 +1,7 @@
 package com.reginaldo.apisistemavendacarros.security;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.reginaldo.apisistemavendacarros.entity.Usuario;
 import com.reginaldo.apisistemavendacarros.repository.UsuarioRepository;
 import jakarta.servlet.FilterChain;
@@ -59,12 +60,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void autenticar(String token) {
-        UUID id = UUID.fromString(jwtService.extrairUsuarioId(token));
+        DecodedJWT jwt = jwtService.verificar(token);
+        UUID id = UUID.fromString(jwt.getSubject());
 
         // Perfil lido do banco a cada requisição: rebaixar um administrador vale na hora
         Usuario usuario = usuarioRepository.findById(id).orElse(null);
 
         if (usuario != null) {
+            // Sessão encerrada depois que o token foi emitido (logout, troca de senha): tratado como token vencido
+            Integer versaoSessao = jwt.getClaim(JwtService.CLAIM_VERSAO_SESSAO).asInt();
+            if (versaoSessao == null || versaoSessao != usuario.getVersaoSessao()) {
+                throw new JWTVerificationException("Sessão encerrada");
+            }
+
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             usuario,

@@ -5,6 +5,8 @@ import com.reginaldo.apisistemavendacarros.dto.usuario.UsuarioRequest;
 import com.reginaldo.apisistemavendacarros.dto.usuario.UsuarioResponse;
 import com.reginaldo.apisistemavendacarros.entity.Usuario;
 import com.reginaldo.apisistemavendacarros.mapper.UsuarioMapper;
+import com.reginaldo.apisistemavendacarros.security.CookieSessao;
+import com.reginaldo.apisistemavendacarros.security.JwtService;
 import com.reginaldo.apisistemavendacarros.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
@@ -16,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,6 +35,8 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
     private final UsuarioMapper usuarioMapper;
+    private final JwtService jwtService;
+    private final CookieSessao cookieSessao;
 
     @PostMapping
     @Operation(summary = "Criar conta")
@@ -50,8 +55,14 @@ public class UsuarioController {
     @PutMapping("/me")
     @Operation(summary = "Atualizar minha conta")
     public ResponseEntity<UsuarioResponse> atualizarUsuarioLogado (@AuthenticationPrincipal Usuario usuario, @Valid @RequestBody UsuarioAtualizacaoRequest request) {
-        UsuarioResponse usuarioResponse = usuarioService.atualizar(usuario.getId(), request);
-        return ResponseEntity.ok(usuarioResponse);
+        Usuario atualizado = usuarioService.atualizar(usuario.getId(), request);
+
+        // Trocar a senha encerra as sessões, inclusive esta: quem trocou recebe um cookie novo e continua logado
+        ResponseEntity.BodyBuilder resposta = ResponseEntity.ok();
+        if (request.trocaSenha()) {
+            resposta.header(HttpHeaders.SET_COOKIE, cookieSessao.criar(jwtService.gerarToken(atualizado), JwtService.VALIDADE).toString());
+        }
+        return resposta.body(usuarioMapper.toResponse(atualizado));
     }
 
     @DeleteMapping("/me")

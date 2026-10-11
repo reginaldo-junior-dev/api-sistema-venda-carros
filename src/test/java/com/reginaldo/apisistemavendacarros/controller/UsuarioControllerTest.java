@@ -5,6 +5,7 @@ import com.reginaldo.apisistemavendacarros.entity.*;
 import com.reginaldo.apisistemavendacarros.enums.*;
 import com.reginaldo.apisistemavendacarros.repository.*;
 import jakarta.persistence.EntityManager;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -154,6 +155,36 @@ class UsuarioControllerTest {
 
         // Falha se a senha for gravada em texto puro
         login(novoEmail, "senhaNova").andExpect(status().isOk());
+    }
+
+    @Test
+    void trocarSenhaDerrubaAsOutrasSessoesEMantemQuemTrocou() throws Exception {
+        String tokenAntigo = fabrica.bearer(usuario);
+
+        Cookie sessaoNova = atualizarMe(usuario, atualizacao("Nome", usuario.getEmail(), DadosTeste.SENHA, "senhaNova1"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getCookie("sessao");
+
+        mockMvc.perform(get("/usuario/me").header("Authorization", tokenAntigo))
+                .andExpect(status().isUnauthorized());
+        assertThat(sessaoNova).isNotNull();
+        mockMvc.perform(get("/usuario/me").cookie(sessaoNova))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void atualizarMeSemTrocarSenhaNaoMexeNaSessao() throws Exception {
+        String token = fabrica.bearer(usuario);
+
+        mockMvc.perform(put("/usuario/me")
+                        .header("Authorization", token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(atualizacao("Nome Novo", usuario.getEmail(), null, null)))
+                .andExpect(status().isOk())
+                .andExpect(result -> assertThat(result.getResponse().getCookie("sessao")).isNull());
+
+        mockMvc.perform(get("/usuario/me").header("Authorization", token))
+                .andExpect(status().isOk());
     }
 
     @Test

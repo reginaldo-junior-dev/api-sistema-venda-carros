@@ -3,6 +3,7 @@ package com.reginaldo.apisistemavendacarros.service;
 import com.reginaldo.apisistemavendacarros.dto.login.LoginRequest;
 import com.reginaldo.apisistemavendacarros.entity.Usuario;
 import com.reginaldo.apisistemavendacarros.exception.MuitasTentativasException;
+import com.reginaldo.apisistemavendacarros.repository.UsuarioRepository;
 import com.reginaldo.apisistemavendacarros.security.LimiteTentativas;
 import com.reginaldo.apisistemavendacarros.security.UsuarioDetails;
 import lombok.RequiredArgsConstructor;
@@ -11,8 +12,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +23,7 @@ public class AuthService {
 
     private final AuthenticationManager authenticationManager;
     private final LimiteTentativas limiteTentativas;
+    private final UsuarioRepository usuarioRepository;
 
     // Confere e-mail e senha; o token e o cookie ficam com o AuthController
     public Usuario login (LoginRequest request) {
@@ -46,6 +50,12 @@ public class AuthService {
                 (UsuarioDetails) authentication.getPrincipal();
 
         return usuarioDetails.getUsuario();
+    }
+
+    // Recarrega do banco: o usuário da requisição está fora da transação
+    @Transactional
+    public void encerrarSessoes (UUID usuarioId) {
+        usuarioRepository.findById(usuarioId).ifPresent(Usuario::encerrarSessoes);
     }
 
 }

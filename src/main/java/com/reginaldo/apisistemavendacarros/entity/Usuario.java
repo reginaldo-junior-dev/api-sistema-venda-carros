@@ -37,8 +37,17 @@ public class Usuario extends EntidadeBase {
     @Column(name = "data_criacao", nullable = false)
     private LocalDateTime dataCriacao;
 
+    // Vai dentro do token: só valem os tokens com a versão atual
+    @Column(name = "versao_sessao", nullable = false)
+    private int versaoSessao;
+
     @PrePersist
     public void prePersist() {
         dataCriacao = LocalDateTime.now();
+    }
+
+    // Derruba quem estiver logado com um token emitido antes, em qualquer aparelho
+    public void encerrarSessoes() {
+        versaoSessao++;
     }
 }
