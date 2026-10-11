@@ -10,6 +10,7 @@ import com.reginaldo.apisistemavendacarros.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -33,8 +34,8 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "Fazer login: grava o cookie da sessão e devolve a conta")
     @SecurityRequirements
-    public ResponseEntity<UsuarioResponse> login (@RequestBody LoginRequest request) {
-        Usuario usuario = authService.login(request);
+    public ResponseEntity<UsuarioResponse> login (@RequestBody LoginRequest request, HttpServletRequest requisicao) {
+        Usuario usuario = authService.login(request, requisicao.getRemoteAddr());
         String token = jwtService.gerarToken(usuario);
 
         return ResponseEntity.ok()

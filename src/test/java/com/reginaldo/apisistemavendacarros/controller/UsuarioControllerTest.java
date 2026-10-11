@@ -130,6 +130,27 @@ class UsuarioControllerTest {
     }
 
     @Test
+    void errarASenhaDeOutraPessoaNaoBloqueiaOLoginDela() throws Exception {
+        for (int i = 0; i < 5; i++) {
+            login(usuario.getEmail(), "senhaErrada", "203.0.113.7").andExpect(status().isUnauthorized());
+        }
+
+        login(usuario.getEmail(), DadosTeste.SENHA, "203.0.113.7").andExpect(status().isTooManyRequests());
+        // A dona da conta, em outro IP, continua entrando
+        login(usuario.getEmail(), DadosTeste.SENHA, "198.51.100.4").andExpect(status().isOk());
+    }
+
+    @Test
+    void errosEspalhadosPorVariosIpsBloqueiamOEmail() throws Exception {
+        // 20 erros (seguranca.tentativas.maximo-por-email), 4 por IP: nenhum IP chega ao limite de 5
+        for (int i = 0; i < 20; i++) {
+            login(usuario.getEmail(), "senhaErrada", "203.0.113." + (i / 4)).andExpect(status().isUnauthorized());
+        }
+
+        login(usuario.getEmail(), DadosTeste.SENHA, "198.51.100.4").andExpect(status().isTooManyRequests());
+    }
+
+    @Test
     void loginCertoZeraAsFalhasAnteriores() throws Exception {
         for (int i = 0; i < 4; i++) {
             login(usuario.getEmail(), "senhaErrada").andExpect(status().isUnauthorized());
@@ -396,7 +417,15 @@ class UsuarioControllerTest {
     }
 
     private ResultActions login(String email, String senha) throws Exception {
+        return login(email, senha, "127.0.0.1");
+    }
+
+    private ResultActions login(String email, String senha, String ip) throws Exception {
         return mockMvc.perform(post("/auth/login").with(tokenCsrf(mockMvc))
+                .with(requisicao -> {
+                    requisicao.setRemoteAddr(ip);
+                    return requisicao;
+                })
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"%s\",\"senha\":\"%s\"}".formatted(email, senha)));
     }

@@ -37,6 +37,19 @@ class LimiteTentativasTest {
     }
 
     @Test
+    void chaveComMaximoProprio() {
+        for (int i = 0; i < 3; i++) {
+            limite.registrarFalha("login:ana");
+        }
+
+        assertThat(limite.bloqueado("login:ana")).isTrue();
+        assertThat(limite.bloqueado("login:ana", 4)).isFalse();
+
+        limite.registrarFalha("login:ana");
+        assertThat(limite.bloqueado("login:ana", 4)).isTrue();
+    }
+
+    @Test
     void desbloqueiaQuandoAJanelaPassa() {
         for (int i = 0; i < 3; i++) limite.registrarFalha("login:ana");
 

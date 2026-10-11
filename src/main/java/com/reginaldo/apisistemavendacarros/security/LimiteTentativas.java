@@ -38,8 +38,13 @@ public class LimiteTentativas {
     }
 
     public boolean bloqueado(String chave) {
+        return bloqueado(chave, maximo);
+    }
+
+    // Para uma chave que tolera mais falhas que o padrão
+    public boolean bloqueado(String chave, int maximoDaChave) {
         Falhas atual = falhas.get(chave);
-        return atual != null && !expirou(atual) && atual.quantidade() >= maximo;
+        return atual != null && !expirou(atual) && atual.quantidade() >= maximoDaChave;
     }
 
     public void registrarFalha(String chave) {
