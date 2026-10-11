@@ -35,8 +35,3 @@ build/
 ### VS Code ###
 .vscode/
 
-### Anotações locais (contêm credenciais) ###
-AwsCredenciais.txt
-StripeTeste.txt
-PreparacaoTeste.txt
-stripe-3ds-teste.html
