@@ -32,28 +32,45 @@ public class OAuth2LoginSucessoHandler implements AuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
 
-        OAuth2User usuario = (OAuth2User) authentication.getPrincipal();
+        OAuth2User usuarioGoogle = (OAuth2User) authentication.getPrincipal();
 
-        String email = usuario.getAttribute("email");
-
-        Usuario usuario1 = usuarioRepository.findByEmail(email).orElse(null);
-        Usuario usuarioFinal;
-
-        if (usuario1 != null) {
-            usuarioFinal = usuario1;
-        } else {
-            Usuario novoUsuario = new Usuario();
-            novoUsuario.setNomeCompleto(usuario.getAttribute("name"));
-            novoUsuario.setEmail(usuario.getAttribute("email"));
-            novoUsuario.setPerfil(PerfilUsuario.USUARIO);
-            novoUsuario.setProvedor(ProvedorAutenticacao.GOOGLE);
-            novoUsuario.setSenha(null);
-
-           usuarioFinal = usuarioRepository.save(novoUsuario);
+        // A conta é localizada pelo e-mail: sem a confirmação do Google, nada prova que a pessoa é dona dele.
+        // Volta ao front sem cookie, como no login recusado
+        if (!Boolean.TRUE.equals(usuarioGoogle.getAttribute("email_verified"))) {
+            response.sendRedirect(frontendUrl + "/oauth/callback");
+            return;
         }
-           String token = jwtService.gerarToken(usuarioFinal);
 
-           response.addHeader(HttpHeaders.SET_COOKIE, cookieSessao.criar(token, JwtService.VALIDADE).toString());
-           response.sendRedirect(frontendUrl + "/oauth/callback");
+        String email = usuarioGoogle.getAttribute("email");
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .map(this::assumirConta)
+                .orElseGet(() -> criarConta(usuarioGoogle));
+
+        String token = jwtService.gerarToken(usuario);
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookieSessao.criar(token, JwtService.VALIDADE).toString());
+        response.sendRedirect(frontendUrl + "/oauth/callback");
+    }
+
+    // O cadastro com senha não confirma o e-mail: alguém poderia cadastrar o endereço de outra pessoa antes dela
+    // e continuar entrando com a própria senha depois que a dona começasse a usar a conta pelo Google.
+    // Com o e-mail confirmado pelo Google, a senha deixa de valer e quem estava logado com ela é derrubado
+    private Usuario assumirConta(Usuario usuario) {
+        if (usuario.getSenha() == null) {
+            return usuario;
+        }
+        usuario.setSenha(null);
+        usuario.setProvedor(ProvedorAutenticacao.GOOGLE);
+        usuario.encerrarSessoes();
+        return usuarioRepository.save(usuario);
+    }
+
+    private Usuario criarConta(OAuth2User usuarioGoogle) {
+        Usuario novoUsuario = new Usuario();
+        novoUsuario.setNomeCompleto(usuarioGoogle.getAttribute("name"));
+        novoUsuario.setEmail(usuarioGoogle.getAttribute("email"));
+        novoUsuario.setPerfil(PerfilUsuario.USUARIO);
+        novoUsuario.setProvedor(ProvedorAutenticacao.GOOGLE);
+        return usuarioRepository.save(novoUsuario);
     }
 }

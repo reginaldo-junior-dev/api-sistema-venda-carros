@@ -43,13 +43,19 @@ class OAuth2LoginHandlersTest {
     }
 
     private static TestingAuthenticationToken loginGoogle(String nome, String email) {
-        OAuth2User usuarioGoogle = new DefaultOAuth2User(List.of(), Map.of("name", nome, "email", email), "email");
+        return loginGoogle(nome, email, true);
+    }
+
+    private static TestingAuthenticationToken loginGoogle(String nome, String email, boolean emailConfirmado) {
+        OAuth2User usuarioGoogle = new DefaultOAuth2User(List.of(),
+                Map.of("name", nome, "email", email, "email_verified", emailConfirmado), "email");
         return new TestingAuthenticationToken(usuarioGoogle, null);
     }
 
     @Test
     void usuarioExistenteVoltaAoFrontComOToken() throws Exception {
         Usuario existente = new Usuario();
+        existente.setProvedor(ProvedorAutenticacao.GOOGLE);
         when(usuarioRepository.findByEmail("ana@exemplo.com")).thenReturn(Optional.of(existente));
         when(jwtService.gerarToken(existente)).thenReturn("token.jwt.ana");
         MockHttpServletResponse resposta = new MockHttpServletResponse();
@@ -80,6 +86,40 @@ class OAuth2LoginHandlersTest {
                         && novo.getSenha() == null));
         assertThat(resposta.getRedirectedUrl()).isEqualTo(FRONT + "/oauth/callback");
         assertThat(resposta.getHeader("Set-Cookie")).startsWith("sessao=token.jwt.bruno;");
+    }
+
+    @Test
+    void contaCriadaComSenhaPerdeASenhaQuandoOGoogleConfirmaOEmail() throws Exception {
+        // Alguém cadastrou o e-mail da Carla com uma senha antes dela
+        Usuario cadastradoComSenha = new Usuario();
+        cadastradoComSenha.setEmail("carla@exemplo.com");
+        cadastradoComSenha.setSenha("$2a$10$hashDaSenhaDeOutraPessoa");
+        cadastradoComSenha.setProvedor(ProvedorAutenticacao.LOCAL);
+        when(usuarioRepository.findByEmail("carla@exemplo.com")).thenReturn(Optional.of(cadastradoComSenha));
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(chamada -> chamada.getArgument(0));
+        when(jwtService.gerarToken(any(Usuario.class))).thenReturn("token.jwt.carla");
+        MockHttpServletResponse resposta = new MockHttpServletResponse();
+
+        sucesso.onAuthenticationSuccess(new MockHttpServletRequest(), resposta, loginGoogle("Carla Dias", "carla@exemplo.com"));
+
+        verify(usuarioRepository).save(cadastradoComSenha);
+        assertThat(cadastradoComSenha.getSenha()).isNull();
+        assertThat(cadastradoComSenha.getProvedor()).isEqualTo(ProvedorAutenticacao.GOOGLE);
+        // Quem já estava logado com a senha perde a sessão
+        assertThat(cadastradoComSenha.getVersaoSessao()).isEqualTo(1);
+        assertThat(resposta.getHeader("Set-Cookie")).startsWith("sessao=token.jwt.carla;");
+    }
+
+    @Test
+    void emailNaoConfirmadoPeloGoogleNaoEntra() throws Exception {
+        MockHttpServletResponse resposta = new MockHttpServletResponse();
+
+        sucesso.onAuthenticationSuccess(new MockHttpServletRequest(), resposta, loginGoogle("Davi Rocha", "davi@exemplo.com", false));
+
+        assertThat(resposta.getRedirectedUrl()).isEqualTo(FRONT + "/oauth/callback");
+        assertThat(resposta.getHeader("Set-Cookie")).isNull();
+        verify(usuarioRepository, never()).findByEmail(any());
+        verify(usuarioRepository, never()).save(any());
     }
 
     @Test
