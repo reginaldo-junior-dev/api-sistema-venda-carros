@@ -1,5 +1,6 @@
 package com.reginaldo.apisistemavendacarros.service;
 
+import com.reginaldo.apisistemavendacarros.enums.FormatoImagem;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,14 +29,15 @@ public class S3Service {
         this.bucket = bucket;
     }
 
-    public String upload (MultipartFile arquivo) throws IOException {
+    // O formato já foi conferido pelos bytes do arquivo. A chave não usa o nome original, que vem de quem envia
+    public String upload (MultipartFile arquivo, FormatoImagem formato) throws IOException {
 
-        String nomeArquivo = UUID.randomUUID() + "_" + arquivo.getOriginalFilename();
+        String nomeArquivo = UUID.randomUUID() + "." + formato.getExtensao();
 
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(nomeArquivo)
-                .contentType(arquivo.getContentType())
+                .contentType(formato.getContentType())
                 .build();
 
         s3Client.putObject(

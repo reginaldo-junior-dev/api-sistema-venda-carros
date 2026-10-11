@@ -3,6 +3,7 @@ package com.reginaldo.apisistemavendacarros.service;
 import com.reginaldo.apisistemavendacarros.dto.imagem.ImagemCarroResponse;
 import com.reginaldo.apisistemavendacarros.entity.Carro;
 import com.reginaldo.apisistemavendacarros.entity.ImagemCarro;
+import com.reginaldo.apisistemavendacarros.enums.FormatoImagem;
 import com.reginaldo.apisistemavendacarros.enums.StatusCarro;
 import com.reginaldo.apisistemavendacarros.exception.RecursoNaoEncontradoException;
 import com.reginaldo.apisistemavendacarros.exception.ValorInvalidoException;
@@ -17,6 +18,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
 
 @Service
@@ -34,7 +36,7 @@ public class ImagemCarroService {
         // Antes do upload: arquivo de carro vendido nem chega ao S3
         garantirNaoVendido(carro);
 
-        String chaveArquivo = s3Service.upload(arquivo);
+        String chaveArquivo = s3Service.upload(arquivo, formato(arquivo));
 
         boolean primeiraImagem = !imagemCarroRepository.existsByCarroId(carroId);
 
@@ -97,6 +99,14 @@ public class ImagemCarroService {
                 s3Service.excluir(chaveArquivo);
             }
         });
+    }
+
+    // Um HTML ou SVG salvo como "foto" seria aberto pelo navegador como página, a partir do endereço do bucket
+    private FormatoImagem formato(MultipartFile arquivo) throws IOException {
+        try (InputStream entrada = arquivo.getInputStream()) {
+            return FormatoImagem.detectar(entrada.readNBytes(FormatoImagem.TAMANHO_ASSINATURA))
+                    .orElseThrow(() -> new ValorInvalidoException("A foto precisa ser uma imagem JPEG, PNG ou WebP"));
+        }
     }
 
     // A compra aponta para o carro: as fotos fazem parte do histórico da venda
